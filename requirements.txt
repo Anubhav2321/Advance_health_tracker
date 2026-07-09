@@ -7,3 +7,4 @@ groq
 PyJWT
 bcrypt
 httpx
+email-validator
