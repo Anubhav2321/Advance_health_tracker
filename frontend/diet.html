@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BioNexus | AI Diet Matrix</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        :root {
+            --bg-dark: #0f1115;
+            --surface-dark: #181b21;
+            --accent-cyan: #00f3ff;
+            --accent-purple: #9d4edd;
+            --accent-green: #00ff87;
+            --accent-orange: #ff9d00;
+            --text-primary: #f8f9fa;
+            --text-secondary: #a0a6b1;
+        }
+
+        body {
+            background-color: var(--bg-dark); color: var(--text-primary);
+            display: flex; justify-content: center; min-height: 100vh; padding-bottom: 80px; 
+        }
+
+        .app-container {
+            width: 100%; max-width: 480px; padding: 20px;
+            background: radial-gradient(circle at top, rgba(255, 157, 0, 0.05), transparent 60%), var(--bg-dark);
+            overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .top-nav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .top-nav h2 { font-size: 1.3rem; font-weight: 600; color: var(--accent-orange); letter-spacing: 1px; }
+
+        /* Calorie Summary */
+        .diet-summary {
+            background: var(--surface-dark); padding: 20px; border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05); text-align: center;
+        }
+        .cal-display { font-size: 2.5rem; font-weight: 700; color: var(--accent-cyan); }
+        .cal-label { font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;}
+        
+        /* AI Planner Button */
+        .ai-plan-btn {
+            width: 100%; background: linear-gradient(135deg, rgba(255,157,0,0.2), rgba(255,0,135,0.2));
+            border: 1px solid var(--accent-orange); color: var(--text-primary);
+            padding: 15px; border-radius: 12px; font-weight: 600; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s;
+        }
+        .ai-plan-btn:hover { box-shadow: 0 0 15px rgba(255, 157, 0, 0.4); }
+        
+        .ai-plan-result {
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; 
+            border-left: 3px solid var(--accent-orange); font-size: 0.85rem;
+            display: none; line-height: 1.5; color: var(--text-primary);
+        }
+
+        /* Smart Search Bar */
+        .search-container { position: relative; }
+        .search-box {
+            display: flex; align-items: center; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 5px 15px;
+        }
+        .search-box input { flex: 1; background: transparent; border: none; color: var(--text-primary); padding: 10px; outline: none; }
+        .search-btn { background: transparent; border: none; color: var(--accent-orange); cursor: pointer; font-size: 1.1rem; }
+        
+        .search-results {
+            background: var(--surface-dark); border: 1px solid var(--accent-orange); 
+            border-radius: 12px; margin-top: 10px; display: none; flex-direction: column; overflow: hidden;
+        }
+        .result-item { padding: 15px; }
+        .res-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .ai-warning-box { background: rgba(255,0,0,0.1); border-left: 3px solid #ff5e5e; padding: 10px; font-size: 0.8rem; margin-bottom: 10px; border-radius: 4px; display: none; }
+        
+        .add-actions { display: flex; gap: 10px; }
+        .add-meal-select { flex: 1; background: rgba(0,0,0,0.3); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2); padding: 8px; border-radius: 6px; outline: none; }
+        .add-btn { background: var(--accent-green); border: none; color: #000; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+        /* Logged Meals List */
+        .section-title { font-size: 1rem; color: var(--text-secondary); margin-top: 10px; margin-bottom: -5px; }
+        .meal-card { background: var(--surface-dark); padding: 15px; border-radius: 12px; border-left: 3px solid var(--accent-green); margin-bottom: 10px; }
+        .meal-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .meal-header h4 { color: var(--text-primary); }
+        .meal-header span { color: var(--accent-green); font-weight: 600; }
+        .meal-details { font-size: 0.85rem; color: var(--text-secondary); }
+
+        /* RIA Large Card */
+        .ria-diet-card {
+            background: linear-gradient(180deg, var(--surface-dark) 0%, rgba(0, 243, 255, 0.05) 100%);
+            border: 1px solid rgba(0, 243, 255, 0.2); border-radius: 16px; padding: 20px;
+            display: flex; flex-direction: column; gap: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        .ria-header { display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
+        .ria-avatar-l { width: 50px; height: 50px; background: rgba(0,243,255,0.1); border: 2px solid var(--accent-cyan); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; color: var(--accent-cyan); }
+        
+        .ria-chat-area { 
+            height: 150px; overflow-y: auto; font-size: 0.85rem; display: flex; flex-direction: column; gap: 10px; 
+            padding-right: 5px; -ms-overflow-style: none; scrollbar-width: none; 
+        }
+        .ria-chat-area::-webkit-scrollbar { display: none; }
+
+        .ria-msg { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; border-bottom-left-radius: 0; color: var(--accent-cyan); line-height: 1.4; }
+        .user-msg { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border-bottom-right-radius: 0; align-self: flex-end; color: var(--text-primary); line-height: 1.4; }
+        
+        .ria-input-grp { display: flex; gap: 10px; }
+        .ria-input-grp input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,243,255,0.3); color: #fff; padding: 10px; border-radius: 8px; outline: none; }
+        .ria-input-grp button { background: var(--accent-cyan); border: none; color: #000; width: 40px; border-radius: 8px; cursor: pointer; }
+
+        .loader { text-align: center; padding: 50px; color: var(--accent-orange); font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="top-nav">
+            <h2><i class="fa-solid fa-utensils"></i> AI Diet Matrix</h2>
+            <div id="date-display" style="color: var(--text-secondary); font-size: 0.9rem;"></div>
+        </div>
+
+        <div id="loading-spinner" class="loader">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Initializing AI...
+        </div>
+
+        <div id="diet-content" style="display: none; flex-direction: column; gap: 20px;">
+            
+            <div class="diet-summary">
+                <div class="cal-label">Total Calories Consumed</div>
+                <div class="cal-display"><span id="ui-consumed-cal">0</span> <span style="font-size: 1.2rem; color: var(--text-secondary);">/ <span id="ui-target-cal">--</span></span></div>
+            </div>
+
+            <div>
+                <button class="ai-plan-btn" id="generate-plan-btn">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> 1-Click AI Meal & Grocery Plan
+                </button>
+                <div class="ai-plan-result" id="ai-plan-box"></div>
+            </div>
+
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="food-search-input" placeholder="Search food (e.g. Biryani, Apple)...">
+                    <button class="search-btn" id="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                
+                <div class="search-results" id="search-results"></div>
+            </div>
+
+            <h3 class="section-title">Today's Logs</h3>
+            <div id="logged-meals-list">
+                <div style="text-align: center; color: var(--text-secondary); padding: 20px;">No meals logged yet.</div>
+            </div>
+
+            <div class="ria-diet-card">
+                <div class="ria-header">
+                    <div class="ria-avatar-l"><i class="fa-solid fa-robot"></i></div>
+                    <div>
+                        <h3 style="color: var(--accent-cyan);">RIA Dietitian</h3>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">Strictly Health & Nutrition</p>
+                    </div>
+                </div>
+                <div class="ria-chat-area" id="ria-diet-chat">
+                    <div class="ria-msg">Hello! Tell me what you're craving, or ask for diet advice based on your remaining calories! 🍏</div>
+                </div>
+                <div class="ria-input-grp">
+                    <input type="text" id="ria-diet-input" placeholder="Ask RIA...">
+                    <button id="ria-diet-send"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="/dashboard" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="/workout" class="nav-item"><i class="fa-solid fa-dumbbell"></i><span>Workout</span></a>
+        <div class="nav-center-dock">
+            <button id="add-data-btn" class="nav-fab-btn"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <a href="/stats" class="nav-item"><i class="fa-solid fa-chart-line"></i><span>Stats</span></a>
+        <a href="/diet" class="nav-item active"><i class="fa-solid fa-utensils"></i><span>Diet</span></a>
+    </nav>
+
+    <script src="js/diet.js"></script>
+</body>
+</html>

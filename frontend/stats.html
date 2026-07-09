@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BioNexus | Matrix Stats</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        :root {
+            --bg-dark: #0f1115;
+            --surface-dark: #181b21;
+            --accent-cyan: #00f3ff;
+            --accent-purple: #9d4edd;
+            --accent-green: #00ff87;
+            --text-primary: #f8f9fa;
+            --text-secondary: #a0a6b1;
+        }
+
+        body {
+            background-color: var(--bg-dark); color: var(--text-primary);
+            display: flex; justify-content: center; min-height: 100vh; padding-bottom: 80px; 
+        }
+
+        .app-container {
+            width: 100%; max-width: 480px; padding: 20px;
+            background: radial-gradient(circle at top, rgba(157, 78, 221, 0.05), transparent 60%), var(--bg-dark);
+            overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .top-nav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .top-nav h2 { font-size: 1.3rem; font-weight: 600; color: var(--accent-purple); letter-spacing: 1px; }
+
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .sum-card {
+            background: var(--surface-dark); padding: 15px; border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05); text-align: center;
+        }
+        .sum-card h3 { font-size: 1.5rem; color: var(--text-primary); margin-bottom: 5px; }
+        .sum-card p { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+        .sum-card.glow-green { border-bottom: 2px solid var(--accent-green); }
+        .sum-card.glow-cyan { border-bottom: 2px solid var(--accent-cyan); }
+
+        .chart-container {
+            background: var(--surface-dark); padding: 20px; border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+        .chart-title { font-size: 1rem; margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        
+        .loader { text-align: center; padding: 50px; color: var(--accent-purple); font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="top-nav">
+            <h2><i class="fa-solid fa-chart-line"></i> Matrix Analytics</h2>
+            <div style="color: var(--text-secondary); font-size: 0.8rem;">Past 7 Days</div>
+        </div>
+
+        <div id="loading-spinner" class="loader">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Analyzing Data...
+        </div>
+
+        <div id="stats-content" style="display: none; flex-direction: column; gap: 20px;">
+            
+            <div class="summary-grid">
+                <div class="sum-card glow-green">
+                    <h3 id="ui-streak">0 <i class="fa-solid fa-fire" style="color: #ff5e5e;"></i></h3>
+                    <p>Day Streak</p>
+                </div>
+                <div class="sum-card glow-cyan">
+                    <h3 id="ui-avg-cal">0</h3>
+                    <p>Avg Cal/Day</p>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title"><i class="fa-solid fa-utensils" style="color: var(--accent-cyan);"></i> Calorie Intake History</div>
+                <canvas id="calorieChart" height="200"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title"><i class="fa-solid fa-dumbbell" style="color: var(--accent-purple);"></i> Workout Volume (Kg)</div>
+                <canvas id="volumeChart" height="200"></canvas>
+            </div>
+
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="/dashboard" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        
+        <a href="/workout" class="nav-item"><i class="fa-solid fa-dumbbell"></i><span>Workout</span></a>
+        
+        <div class="nav-center-dock">
+            <button id="add-data-btn" class="nav-fab-btn" onclick="window.location.href='/dashboard'"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        
+        <a href="/stats" class="nav-item active"><i class="fa-solid fa-chart-line"></i><span>Stats</span></a>
+        
+        <a href="/diet" class="nav-item"><i class="fa-solid fa-utensils"></i><span>Diet</span></a>
+    </nav>
+
+    <script src="js/stats.js"></script>
+</body>
+</html>

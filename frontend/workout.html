@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BioNexus | Cyber Workout</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/dashboard.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        :root {
+            --bg-dark: #0f1115;
+            --surface-dark: #181b21;
+            --accent-cyan: #00f3ff;
+            --accent-purple: #9d4edd;
+            --accent-green: #00ff87;
+            --text-primary: #f8f9fa;
+            --text-secondary: #a0a6b1;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding-bottom: 80px; 
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+            background: radial-gradient(circle at top, rgba(0, 243, 255, 0.05), transparent 60%), var(--bg-dark);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .top-nav h2 { font-size: 1.3rem; font-weight: 600; color: var(--accent-cyan); letter-spacing: 1px; }
+
+        /* Hologram Progress Ring */
+        .progress-section {
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column; padding: 20px 0; position: relative;
+        }
+        .progress-ring { width: 150px; height: 150px; position: relative; }
+        .progress-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .progress-ring circle { fill: none; stroke-width: 10; stroke-linecap: round; }
+        .progress-ring .bg-circle { stroke: rgba(255,255,255,0.05); }
+        .progress-ring .fill-circle {
+            stroke: var(--accent-cyan);
+            stroke-dasharray: 408; 
+            stroke-dashoffset: 408;
+            transition: stroke-dashoffset 0.8s ease-out;
+            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.5));
+        }
+        .progress-text {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); text-align: center;
+        }
+        .progress-text h3 { font-size: 1.8rem; color: var(--text-primary); }
+        .progress-text p { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Accordion List */
+        .workout-list { display: flex; flex-direction: column; gap: 15px; }
+        
+        .exercise-card {
+            background: var(--surface-dark);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden; transition: all 0.3s ease;
+        }
+        .exercise-card.completed {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 15px rgba(0, 255, 135, 0.1);
+        }
+
+        .ex-header {
+            padding: 18px; display: flex; justify-content: space-between;
+            align-items: center; cursor: pointer; background: rgba(255,255,255,0.02);
+        }
+        .ex-info h4 { font-size: 1.1rem; color: var(--text-primary); margin-bottom: 5px; }
+        .ex-info p { font-size: 0.85rem; color: var(--accent-purple); }
+        .ex-toggle { color: var(--accent-cyan); transition: 0.3s; }
+        .exercise-card.active .ex-toggle { transform: rotate(180deg); }
+
+        /* Accordion Body */
+        .ex-body {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.4s ease; background: rgba(0,0,0,0.2);
+        }
+        .exercise-card.active .ex-body { max-height: 300px; }
+
+        .set-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+        .set-row:last-child { border-bottom: none; }
+        .set-number { color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; width: 50px; }
+        
+        .set-inputs { display: flex; gap: 10px; align-items: center; }
+        .set-inputs input {
+            width: 60px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1); color: var(--accent-cyan);
+            padding: 8px; border-radius: 8px; text-align: center; outline: none;
+        }
+        .set-inputs input:focus { border-color: var(--accent-cyan); }
+        
+        /* Cyber Checkbox */
+        .cyber-check {
+            width: 28px; height: 28px; border-radius: 8px;
+            border: 2px solid var(--text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s; color: transparent;
+        }
+        .cyber-check.checked {
+            background: var(--accent-green); border-color: var(--accent-green);
+            color: var(--bg-dark); box-shadow: 0 0 15px rgba(0, 255, 135, 0.4);
+        }
+
+        /* Final Trigger Button */
+        .complete-btn {
+            width: 100%; padding: 18px; margin-top: 10px; margin-bottom: 30px;
+            background: rgba(0, 243, 255, 0.1); color: var(--accent-cyan);
+            border: 1px solid var(--accent-cyan); border-radius: 12px;
+            font-size: 1.1rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 2px; cursor: pointer; transition: 0.3s;
+            display: flex; justify-content: center; gap: 10px;
+            opacity: 0.5; pointer-events: none;
+        }
+        .complete-btn.ready {
+            opacity: 1; pointer-events: auto; background: var(--accent-cyan);
+            color: var(--bg-dark); box-shadow: 0 0 25px rgba(0, 243, 255, 0.5);
+        }
+
+        .loader { text-align: center; padding: 50px; color: var(--accent-cyan); font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div class="top-nav">
+            <h2><i class="fa-solid fa-dumbbell"></i> Cyber Matrix Workout</h2>
+            <div id="date-display" style="color: var(--text-secondary); font-size: 0.9rem;"></div>
+        </div>
+
+        <div id="loading-spinner" class="loader">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Loading Matrix...
+        </div>
+
+        <div id="workout-content" style="display: none; flex-direction: column; gap: 20px;">
+            
+            <div class="progress-section">
+                <div class="progress-ring">
+                    <svg>
+                        <circle class="bg-circle" cx="75" cy="75" r="65"></circle>
+                        <circle class="fill-circle" id="progress-circle" cx="75" cy="75" r="65"></circle>
+                    </svg>
+                    <div class="progress-text">
+                        <h3 id="progress-text">0%</h3>
+                        <p>Completed</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="workout-list" id="workout-list">
+                </div>
+
+            <button class="complete-btn" id="complete-btn">
+                <i class="fa-solid fa-bolt"></i> Sync Data
+            </button>
+        </div>
+
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="/dashboard" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        
+        <a href="/workout" class="nav-item active"><i class="fa-solid fa-dumbbell"></i><span>Workout</span></a>
+        
+        <div class="nav-center-dock">
+            <button id="add-data-btn" class="nav-fab-btn" onclick="window.location.href='/dashboard'"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        
+        <a href="/stats" class="nav-item"><i class="fa-solid fa-chart-line"></i><span>Stats</span></a>
+        
+        <a href="/diet" class="nav-item"><i class="fa-solid fa-utensils"></i><span>Diet</span></a>
+    </nav>
+
+    <script src="js/workout.js"></script>
+</body>
+</html>

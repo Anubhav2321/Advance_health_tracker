@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BioNexus | Initializing AI...</title>
+    <style>
+        /* --- Reset & Background --- */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0f1115; /* Deep dark cyber background */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            transition: opacity 0.5s ease;
+        }
+
+        /* --- Container --- */
+        .splash-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        /* --- Glowing Logo --- */
+        .splash-logo {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 1.5px;
+            margin: 0;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5), 0 0 25px rgba(157, 78, 221, 0.6);
+            animation: pulse-glow 2s infinite alternate;
+        }
+        .splash-logo span {
+            color: #00f3ff;
+        }
+
+        /* --- Cyberpunk Loading Bar --- */
+        .cyber-loading-bar {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.2);
+        }
+        .cyber-loading-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #9d4edd, #00f3ff);
+            box-shadow: 0 0 15px #00f3ff;
+            animation: load-bar 2.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        /* --- Loading Text --- */
+        .splash-text {
+            font-size: 0.85rem;
+            color: #00f3ff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 0;
+            animation: blink-text 1.5s infinite;
+        }
+
+        /* --- Animations --- */
+        @keyframes pulse-glow {
+            0% { text-shadow: 0 0 10px rgba(0, 243, 255, 0.3), 0 0 20px rgba(157, 78, 221, 0.3); transform: scale(1); }
+            100% { text-shadow: 0 0 25px rgba(0, 243, 255, 0.9), 0 0 45px rgba(157, 78, 221, 0.9); transform: scale(1.05); }
+        }
+        @keyframes load-bar {
+            0% { width: 0%; }
+            40% { width: 50%; }
+            80% { width: 80%; }
+            100% { width: 100%; }
+        }
+        @keyframes blink-text {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Fade out class for smooth transition to dashboard */
+        .fade-out {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="splash-content">
+        <h1 class="splash-logo">Bio<span>Nexus</span></h1>
+        <div class="cyber-loading-bar">
+            <div class="cyber-loading-fill"></div>
+        </div>
+        <p class="splash-text">Initializing AI Core...</p>
+    </div>
+
+    <script>
+        // Wait for 3 seconds (duration of the intro animation)
+        setTimeout(() => {
+            // Apply fade out effect
+            document.body.classList.add('fade-out');
+            
+            // Redirect to Dashboard after fade out completes (500ms)
+            setTimeout(() => {
+                window.location.href = "/dashboard";
+            }, 500);
+            
+        }, 3000);
+    </script>
+
+</body>
+</html>

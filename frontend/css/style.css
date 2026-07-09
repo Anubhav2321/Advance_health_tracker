@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* --- Global Variables (Smooth Cyberpunk/Neon Theme) --- */
+:root {
+    --bg-dark: #0f1115;
+    --surface-dark: #181b21;
+    --surface-light: #22262f;
+    
+    --accent-cyan: #00f3ff;
+    --accent-purple: #9d4edd;
+    --accent-green: #00ff87;
+    
+    --text-primary: #f8f9fa;
+    --text-secondary: #a0a6b1;
+    
+    /* Advanced 3D Glow Effects */
+    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --glow-cyan: 0 0 10px rgba(0, 243, 255, 0.5), 0 0 20px rgba(0, 243, 255, 0.3), inset 0 0 5px rgba(0, 243, 255, 0.2);
+    --glow-purple: 0 0 10px rgba(157, 78, 221, 0.5), 0 0 20px rgba(157, 78, 221, 0.3), inset 0 0 5px rgba(157, 78, 221, 0.2);
+    --glow-green: 0 0 10px rgba(0, 255, 135, 0.5), 0 0 20px rgba(0, 255, 135, 0.3), inset 0 0 5px rgba(0, 255, 135, 0.2);
+    --glow-red: 0 0 10px rgba(255, 94, 94, 0.5), 0 0 20px rgba(255, 94, 94, 0.3), inset 0 0 5px rgba(255, 94, 94, 0.2);
+    
+    --nav-height: 70px;
+}
+
+/* --- Base Resets --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    line-height: 1.5;
+    overflow-x: hidden;
+    padding-bottom: var(--nav-height);
+}
+
+/* --- Reusable App Layout Utility --- */
+.app-container {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background-color: var(--bg-dark);
+    position: relative;
+    box-shadow: var(--shadow-soft);
+}
+
+/* --- Top Header --- */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    position: sticky;
+    top: 0;
+    background-color: rgba(15, 17, 21, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 50;
+}
+
+.header-title h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.header-title span {
+    color: var(--accent-cyan);
+    text-shadow: var(--glow-cyan);
+}
+
+.profile-btn {
+    background: var(--surface-light);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.3s ease;
+    overflow: hidden;
+}
+
+/* --- Bottom Navigation --- */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    height: var(--nav-height);
+    background-color: var(--surface-dark);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    z-index: 100;
+    padding: 0 10px;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.75rem;
+    gap: 4px;
+    width: 60px;
+    transition: color 0.3s ease;
+}
+
+.nav-item i {
+    font-size: 1.25rem;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.nav-item.active {
+    color: var(--accent-cyan);
+}
+
+.nav-item.active i {
+    text-shadow: var(--glow-cyan);
+    transform: translateY(-2px);
+}

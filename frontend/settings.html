@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BioNexus | Matrix Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        :root {
+            --bg-dark: #0f1115;
+            --surface-dark: #181b21;
+            /* This is the master variable that will change dynamically */
+            --accent-master: #00f3ff; 
+            --text-primary: #f8f9fa;
+            --text-secondary: #a0a6b1;
+            --danger-red: #ff5e5e;
+        }
+
+        body {
+            background-color: var(--bg-dark); color: var(--text-primary);
+            display: flex; justify-content: center; min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%; max-width: 480px; padding: 20px;
+            background: radial-gradient(circle at top right, rgba(255,255,255,0.03), transparent 70%), var(--bg-dark); 
+            overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        .app-container::-webkit-scrollbar { display: none; }
+
+        .top-nav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05); 
+            position: sticky; top: 0; background: rgba(15, 17, 21, 0.8); 
+            backdrop-filter: blur(10px); z-index: 10;
+        }
+        .back-btn { color: var(--text-primary); font-size: 1.2rem; cursor: pointer; text-decoration: none; padding: 5px 10px 5px 0; }
+        .top-nav h2 { font-size: 1.2rem; font-weight: 600; color: var(--accent-master); letter-spacing: 1px; flex: 1; text-align: center; margin-right: 25px; transition: color 0.3s; }
+
+        /* 💥 FIX: Premium Glassy Section */
+        .settings-section {
+            background: rgba(24, 27, 33, 0.4); 
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px;
+        }
+        .section-title { font-size: 1rem; color: var(--accent-master); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 5px; transition: color 0.3s; }
+
+        /* 💥 FIX: Input sizing & Glassy fields */
+        .input-group { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+        .input-group label { font-size: 0.85rem; color: var(--text-secondary); }
+        .input-group input, .input-group select {
+            width: 100%; /* Forces it to stay inside container */
+            background: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.15); color: var(--text-primary);
+            padding: 12px; border-radius: 8px; outline: none; font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        .input-group input:focus, .input-group select:focus { border-color: var(--accent-master); box-shadow: 0 0 10px rgba(0, 243, 255, 0.1); }
+        .input-group select option { background: var(--surface-dark); }
+
+        .row-2 { display: flex; gap: 15px; width: 100%; }
+
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+        .toggle-row label { font-size: 0.95rem; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: var(--text-secondary); transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: rgba(255,255,255,0.1); border: 1px solid var(--accent-master); }
+        input:checked + .slider:before { transform: translateX(24px); background-color: var(--accent-master); box-shadow: 0 0 10px var(--accent-master); }
+
+        .btn-primary { background: var(--accent-master); color: #000; border: none; padding: 15px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; width: 100%; }
+        .btn-outline { background: transparent; color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2); padding: 12px; border-radius: 12px; font-size: 0.9rem; cursor: pointer; transition: 0.3s; width: 100%; }
+        .btn-danger { background: rgba(255, 94, 94, 0.1); color: var(--danger-red); border: 1px solid var(--danger-red); padding: 15px; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; }
+
+        .loader { text-align: center; padding: 50px; color: var(--accent-master); }
+        #settings-content { display: none; flex-direction: column; gap: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div class="top-nav">
+            <a href="javascript:history.back()" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+            <h2><i class="fa-solid fa-gear"></i> Settings Matrix</h2>
+        </div>
+
+        <div id="loading-spinner" class="loader">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Accessing Systems...
+        </div>
+
+        <div id="settings-content">
+            
+            <div class="settings-section">
+                <h3 class="section-title"><i class="fa-solid fa-user-astronaut"></i> Bio-Metrics</h3>
+                
+                <div class="input-group">
+                    <label>Fitness Goal</label>
+                    <select id="set-goal">
+                        <option value="weight_loss">Weight Loss</option>
+                        <option value="maintenance">Maintenance (Default)</option>
+                        <option value="muscle_gain">Muscle Gain</option>
+                    </select>
+                </div>
+
+                <div class="row-2">
+                    <div class="input-group">
+                        <label>Weight (Kg)</label>
+                        <input type="number" id="set-weight" step="0.1" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Height (cm)</label>
+                        <input type="number" id="set-height" required>
+                    </div>
+                </div>
+
+                <div class="row-2">
+                    <div class="input-group">
+                        <label>Age</label>
+                        <input type="number" id="set-age" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Gender</label>
+                        <select id="set-gender">
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Activity Level</label>
+                    <select id="set-activity">
+                        <option value="sedentary">Sedentary (Office Job)</option>
+                        <option value="light">Lightly Active</option>
+                        <option value="moderate">Moderately Active</option>
+                        <option value="active">Very Active (Sports)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3 class="section-title"><i class="fa-solid fa-palette"></i> Interface & AI</h3>
+                
+                <div class="row-2">
+                    <div class="input-group">
+                        <label>UI Theme</label>
+                        <select id="set-theme-mode">
+                            <option value="dark">Cyber Dark</option>
+                            <option value="light">Clean Light</option>
+                            <option value="system">System Default</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Accent Color</label>
+                        <select id="set-theme-color">
+                            <option value="cyan">Neon Cyan</option>
+                            <option value="purple">Synthwave Purple</option>
+                            <option value="green">Matrix Green</option>
+                            <option value="orange">Sunset Orange</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row-2" style="margin-top: 10px;">
+                    <div class="input-group">
+                        <label>RIA's Tone</label>
+                        <select id="set-ria-tone">
+                            <option value="friendly">Friendly & Cute</option>
+                            <option value="strict">Strict Coach</option>
+                            <option value="professional">Professional</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>RIA's Lang</label>
+                        <select id="set-ria-lang">
+                            <option value="english">English</option>
+                            <option value="banglish">Banglish</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="save-settings-btn"><i class="fa-solid fa-microchip"></i> Update Matrix Configurations</button>
+
+            <div class="settings-section" style="margin-top: 10px;">
+                <h3 class="section-title" style="color: var(--text-secondary); border-color: rgba(255,255,255,0.05);"><i class="fa-solid fa-shield-halved"></i> Security & Data</h3>
+                
+                <div class="input-group" style="margin-top: 10px;">
+                    <input type="password" id="old-pass" placeholder="Current Password">
+                    <input type="password" id="new-pass" placeholder="New Password" style="margin-top: 5px;">
+                    <button class="btn-outline" id="change-pass-btn" style="margin-top: 10px;">Update Password</button>
+                    <div id="pass-msg" style="font-size: 0.8rem; margin-top: 5px;"></div>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.05); margin: 15px 0;">
+
+                <button class="btn-outline" id="export-data-btn" style="color: var(--accent-master); border-color: var(--accent-master);">
+                    <i class="fa-solid fa-file-pdf"></i> Export Data as PDF
+                </button>
+
+                <button class="btn-danger" id="delete-account-btn" style="margin-top: 10px;">
+                    <i class="fa-solid fa-skull"></i> Erase Account Permanently
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/settings.js"></script>
+</body>
+</html>
