@@ -43,7 +43,9 @@ ALGORITHM = "HS256"
 
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
-REDIRECT_URI = "http://127.0.0.1:8000/api/auth/google/callback"
+
+# 💥 FIX: Updated to LIVE Render URL
+REDIRECT_URI = "https://bionexus-live.onrender.com/api/auth/google/callback"
 
 # ==========================================
 # CORE SECURITY FUNCTIONS
