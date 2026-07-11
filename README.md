@@ -101,14 +101,52 @@ The application combines beautiful UI design, secure authentication, AI-driven h
 - Settings Management
 
 ---
+## 📱 Application Preview
 
-# 🖼️ Application Preview
+<table align="center">
+<tr>
+<td align="center">
+<img src="frontend/assets/login.png" width="165"><br>
+<b>🔐 Login</b>
+</td>
 
-| Splash Screen | Login Gateway | AI Dashboard | Health Statistics |
-|---------------|---------------|--------------|-------------------|
-| ![](https://via.placeholder.com/300x620.png?text=Splash+Screen) | ![](https://via.placeholder.com/300x620.png?text=Login+Gateway) | ![](https://via.placeholder.com/300x620.png?text=AI+Dashboard) | ![](https://via.placeholder.com/300x620.png?text=Health+Statistics) |
+<td align="center">
+<img src="frontend/assets/dashboard.png" width="165"><br>
+<b>🏠 Dashboard</b>
+</td>
 
-> Replace these placeholder images with screenshots of your application.
+<td align="center">
+<img src="frontend/assets/workout.png" width="165"><br>
+<b>💪 Workout</b>
+</td>
+
+<td align="center">
+<img src="frontend/assets/analytics.png" width="165"><br>
+<b>📊 Analytics</b>
+</td>
+
+<td align="center">
+<img src="frontend/assets/diet.png" width="165"><br>
+<b>🥗 AI Diet</b>
+</td>
+</tr>
+</table>
+
+<p align="center">
+<i>Experience BioNexus through a futuristic Cyberpunk-inspired interface powered by AI.</i>
+</p>
+
+---
+
+### ✨ Experience the BioNexus Interface
+
+| Screen | Description |
+|---------|-------------|
+| 🔐 **Login Authentication** | Secure JWT & Google OAuth login with a futuristic Cyberpunk design. |
+| 🏠 **Main Dashboard** | Personalized health overview, nutrition tracking, hydration, and lifestyle insights. |
+| 💪 **Cyber Matrix Workout** | AI-powered workout planner with progress tracking and exercise management. |
+| 📊 **Analytics & Stats** | Interactive charts and health analytics to monitor daily performance. |
+| 🥗 **AI Diet Maintainer** | Intelligent AI diet planner providing calorie tracking and personalized nutrition recommendations. |
 
 ---
 
