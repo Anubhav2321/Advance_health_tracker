@@ -425,7 +425,7 @@ This project is licensed under the **MIT License**.
 
 🎓 BCA (Honours) Student | AI & Full-Stack Developer
 
-- 🌐 Portfolio: *Coming Soon*
+- 🌐 Portfolio: https://anubhavsamanta.vercel.app/
 - 💻 GitHub: https://github.com/Anubhav2321
 
 ---
