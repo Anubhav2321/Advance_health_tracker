@@ -103,38 +103,57 @@ The application combines beautiful UI design, secure authentication, AI-driven h
 ---
 ## 📱 Application Preview
 
-<table align="center">
+<div align="center">
+
+<table>
 <tr>
-<td align="center">
-<img src="frontend/assets/login.png" width="165"><br>
-<b>🔐 Login</b>
+
+<td align="center" width="20%">
+<img src="frontend/assets/login.png" width="170" alt="Login"/>
+
+**🔐 Login**
 </td>
 
-<td align="center">
-<img src="frontend/assets/dashboard.png" width="165"><br>
-<b>🏠 Dashboard</b>
+<td width="15"></td>
+
+<td align="center" width="20%">
+<img src="frontend/assets/dashboard.png" width="170" alt="Dashboard"/>
+
+**🏠 Dashboard**
 </td>
 
-<td align="center">
-<img src="frontend/assets/workout.png" width="165"><br>
-<b>💪 Workout</b>
+<td width="15"></td>
+
+<td align="center" width="20%">
+<img src="frontend/assets/workout.png" width="170" alt="Workout"/>
+
+**💪 Workout**
 </td>
 
-<td align="center">
-<img src="frontend/assets/analytics.png" width="165"><br>
-<b>📊 Analytics</b>
+<td width="15"></td>
+
+<td align="center" width="20%">
+<img src="frontend/assets/analytics.png" width="170" alt="Analytics"/>
+
+**📊 Analytics**
 </td>
 
-<td align="center">
-<img src="frontend/assets/diet.png" width="165"><br>
-<b>🥗 AI Diet</b>
+<td width="15"></td>
+
+<td align="center" width="20%">
+<img src="frontend/assets/diet.png" width="170" alt="AI Diet"/>
+
+**🥗 AI Diet**
 </td>
+
 </tr>
 </table>
 
-<p align="center">
-<i>Experience BioNexus through a futuristic Cyberpunk-inspired interface powered by AI.</i>
-</p>
+<br>
+
+> ✨ **Experience BioNexus through a futuristic Cyberpunk-inspired interface powered by AI.**
+
+</div>
 
 ---
 
