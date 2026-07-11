@@ -23,12 +23,21 @@ Intelligent Health Analytics • AI Insights • Cyberpunk UI • Secure Authent
 
 # 🌐 Live Demo
 
-### 🚀 Experience BioNexus Live
+<div align="center">
 
-**🔗 Website:** https://bionexus-live.onrender.com
+# 🚀 Experience BioNexus Live
 
----
+### 🌌 Step into the Future of AI-Powered Healthcare
 
+<p>
+<a href="https://bionexus-live.onrender.com" target="_blank">
+<img src="https://img.shields.io/badge/🚀%20Launch%20Live%20Demo-00ff87?style=for-the-badge&logo=render&logoColor=black"/>
+</a>
+</p>
+
+### ⚡ Click the button above to explore BioNexus in action!
+
+</div>
 # 📖 Overview
 
 **BioNexus** is a next-generation AI-powered health tracking web application designed to deliver intelligent, personalized healthcare experiences through modern Artificial Intelligence.
