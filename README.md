@@ -35,9 +35,13 @@ Intelligent Health Analytics • AI Insights • Cyberpunk UI • Secure Authent
 </a>
 </p>
 
+
 ### ⚡ Click the button above to explore BioNexus in action!
 
 </div>
+
+---
+
 # 📖 Overview
 
 **BioNexus** is a next-generation AI-powered health tracking web application designed to deliver intelligent, personalized healthcare experiences through modern Artificial Intelligence.
