@@ -29,6 +29,8 @@ from backend.workout_routes import router as workout_router
 from backend.stats_routes import router as stats_router
 from backend.diet_routes import router as diet_router 
 from backend.settings_routes import router as settings_router 
+# AI Cyber-Doc Router
+from backend.ai_routes import router as ai_router 
 
 # --- Setup Professional Logging ---
 logging.basicConfig(
@@ -44,7 +46,7 @@ ALGORITHM = "HS256"
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 
-# 💥 FIX: Updated to LIVE Render URL
+# FIX: Updated to LIVE Render URL
 REDIRECT_URI = "https://bionexus-live.onrender.com/api/auth/google/callback"
 
 # ==========================================
@@ -162,6 +164,10 @@ async def serve_diet(): return FileResponse(os.path.join(FRONTEND_DIR, "diet.htm
 
 @app.get("/settings", tags=["UI Routes"])
 async def serve_settings(): return FileResponse(os.path.join(FRONTEND_DIR, "settings.html"))
+
+# === NEW: Cyber-Doc AI UI Route ===
+@app.get("/cyber-doc", tags=["UI Routes"])
+async def serve_cyber_doc(): return FileResponse(os.path.join(FRONTEND_DIR, "cyber-doc.html"))
 
 @app.get("/index.html", include_in_schema=False)
 async def redirect_index_to_dashboard(): return RedirectResponse(url="/dashboard")
@@ -363,7 +369,7 @@ async def create_user_profile(user_data: UserOnboarding):
         full_profile = UserProfile(**user_data.model_dump(), **calculated_macros)
         profile_dict = full_profile.model_dump()
         
-        # 💥 ANTI-WIPE FIX: Prevent overwriting existing picture with empty data
+        # 🚨 ANTI-WIPE FIX: Prevent overwriting existing picture with empty data
         if "profile_image" in profile_dict and not profile_dict["profile_image"]:
             del profile_dict["profile_image"]
         
@@ -415,7 +421,7 @@ async def ria_chat_engine(chat: ChatMessage):
     try:
         groq_api_key = os.environ.get("GROQ_API_KEY", "YOUR_GROQ_API_KEY_HERE") 
         if groq_api_key == "YOUR_GROQ_API_KEY_HERE":
-            return {"status": "success", "reply": "My creator Anubhav hasn't inserted my API key yet! 🧠⚡"}
+            return {"status": "success", "reply": "My creator Anubhav hasn't inserted my API key yet! 🤖🔧"}
 
         client = AsyncGroq(api_key=groq_api_key)
         ria_persona = """You are RIA (Responsive Intelligent Assistant), an advanced, cute, and friendly AI health coach built by Anubhav. 
@@ -430,7 +436,7 @@ async def ria_chat_engine(chat: ChatMessage):
         return {"status": "success", "reply": chat_completion.choices[0].message.content}
     except Exception as e:
         logger.error(f"RIA AI Engine Error: {e}")
-        raise HTTPException(status_code=500, detail="I am experiencing a temporary cognitive overload. Please try again! 🤖💤")
+        raise HTTPException(status_code=500, detail="I am experiencing a temporary cognitive overload. Please try again! 🤯")
 
 @app.post("/api/upload-image", tags=["User Profile"])
 async def upload_profile_image(data: ImageUpdate):
@@ -445,6 +451,7 @@ async def upload_profile_image(data: ImageUpdate):
         logger.error(f"Image Upload Error: {e}")
         raise HTTPException(status_code=500, detail="Failed to upload image")
 
+
 # ==========================================
 # IMPORT AND INCLUDE ADDITIONAL ROUTES
 # ==========================================
@@ -452,3 +459,5 @@ app.include_router(workout_router, prefix="/api/workout", tags=["Workout System"
 app.include_router(stats_router, prefix="/api/stats", tags=["Statistics"])
 app.include_router(diet_router, prefix="/api/diet", tags=["Diet System"])
 app.include_router(settings_router, prefix="/api/settings", tags=["System Settings"])
+# A new AI Doctor router has been added.
+app.include_router(ai_router, prefix="/api/ai", tags=["Cyber Doc AI"])

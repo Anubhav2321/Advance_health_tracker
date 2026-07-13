@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioNexus | Cyber-Doc Core</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Cyberpunk Global Settings */
+        body {
+            margin: 0; padding: 0;
+            background-color: #0f1115;
+            color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .chat-header {
+            padding: 20px;
+            background: rgba(24, 27, 33, 0.8);
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .back-btn {
+            color: #00f3ff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .header-title h2 { margin: 0; font-size: 1.2rem; color: #fff; }
+        .header-title p { margin: 0; font-size: 0.8rem; color: #00ff87; }
+
+        /* Chat Area */
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Message Bubbles */
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        .bot-msg {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.05);
+        }
+        .user-msg {
+            background: #181b21;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        /* Warning Message Styling */
+        .warning-msg {
+            background: rgba(255, 170, 0, 0.1);
+            border: 1px solid #ffaa00;
+            color: #ffaa00;
+            align-self: center;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+            width: 90%;
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 20px;
+            background: #181b21;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 10px;
+        }
+        .input-box {
+            flex: 1;
+            background: #0f1115;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            outline: none;
+        }
+        .input-box:focus {
+            border-color: #00f3ff;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        }
+        .send-btn {
+            background: #00f3ff;
+            color: #0f1115;
+            border: none;
+            padding: 0 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .send-btn:hover { box-shadow: 0 0 15px rgba(0, 243, 255, 0.5); }
+
+        /* --- RED SYSTEM LOCKDOWN SCREEN --- */
+        .lockdown-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 0, 60, 0.15);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .lockdown-overlay.active {
+            visibility: visible; opacity: 1;
+        }
+        .lockdown-box {
+            background: #0f1115;
+            border: 2px solid #ff003c;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 0, 60, 0.5);
+            max-width: 80%;
+        }
+        .lockdown-box i { font-size: 3rem; color: #ff003c; margin-bottom: 15px; }
+        .lockdown-box h2 { color: #ff003c; margin-top: 0; letter-spacing: 2px; }
+        
+        /* Loading Animation */
+        .typing-indicator { display: none; color: #00f3ff; font-size: 0.9rem; padding: 10px; align-self: flex-start; }
+    </style>
+</head>
+<body>
+
+    <!-- Red Lockdown Screen -->
+    <div class="lockdown-overlay" id="lockdown-screen">
+        <div class="lockdown-box">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <h2>SYSTEM LOCKDOWN</h2>
+            <p id="lockdown-text">AI Core access revoked due to unauthorized queries.</p>
+            <button onclick="window.location.href='/dashboard'" style="margin-top:20px; padding:10px 20px; background:transparent; border:1px solid #ff003c; color:#ff003c; cursor:pointer; border-radius:8px;">Return to Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="chat-header">
+        <a href="/dashboard" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+        <div class="header-title">
+            <h2>BioNexus AI Core</h2>
+            <p><i class="fa-solid fa-circle" style="font-size:8px;"></i> Clinical Mode Online</p>
+        </div>
+    </div>
+
+    <!-- Chat Messages -->
+    <div class="chat-container" id="chat-box">
+        <div class="message bot-msg">
+            Scanning complete. I am the BioNexus Medical AI Core. Please describe your symptoms in detail. (Note: I only process health-related queries).
+        </div>
+        <!-- Typing text -->
+        <div class="typing-indicator" id="typing">AI is analyzing...</div>
+    </div>
+
+    <!-- Input Box -->
+    <div class="input-area">
+        <input type="text" id="user-input" class="input-box" placeholder="Describe your symptoms here..." onkeypress="handleEnter(event)">
+        <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+
+    <!-- External JavaScript File Connected -->
+    <script src="js/cyber-doc.js"></script>
+</body>
+</html>

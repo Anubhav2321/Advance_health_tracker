@@ -223,6 +223,128 @@
 .bg-green { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
 
 
+/* =========================================
+   BioNexus: Cyber-Doc AI Banner Styles
+   ========================================= */
+
+/* Cyber-Doc Section Margin */
+.cyber-doc-section {
+    margin: 20px 0;
+}
+
+/* Glassy Card Styling */
+.cyber-doc-card {
+    background: rgba(0, 243, 255, 0.05); /* Slight cyan tint for glass */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    border-radius: 20px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Glow effect behind the card (similar to premium-macro-card) */
+.cyber-doc-card::before {
+    content: '';
+    position: absolute;
+    bottom: -30px; 
+    left: -30px;
+    width: 100px; 
+    height: 100px;
+    background: radial-gradient(circle, rgba(0, 243, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* Hover Animations */
+.cyber-doc-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 243, 255, 0.2);
+    border: 1px solid rgba(0, 243, 255, 0.5);
+    background: rgba(0, 243, 255, 0.08);
+}
+
+.cyber-doc-card:active {
+    transform: translateY(2px) scale(0.98);
+}
+
+/* Icon Wrapper */
+.card-icon-wrapper {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background: rgba(0, 243, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0, 243, 255, 0.3);
+}
+
+.cyber-icon {
+    font-size: 20px;
+    color: var(--accent-cyan);
+    text-shadow: 0 0 10px rgba(0, 243, 255, 0.6);
+}
+
+/* Text Information */
+.card-info {
+    flex: 1;
+}
+
+.card-info h3 {
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.card-info p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Online Indicator (Pulsing Dot) */
+.status-indicator {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-green);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 255, 135, 0.1);
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 255, 135, 0.2);
+}
+
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--accent-green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent-green);
+    animation: pulse-online 1.5s infinite alternate;
+}
+
+@keyframes pulse-online {
+    0% { transform: scale(0.8); opacity: 0.6; box-shadow: 0 0 4px var(--accent-green); }
+    100% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px var(--accent-green); }
+}
+
+
 /* --- 2. Lifestyle Goals --- */
 .section-title {
     font-size: 1.1rem;
@@ -445,7 +567,7 @@
     backdrop-filter: blur(20px);
     width: 90%; max-width: 360px;
     
-    /* 💥 FIX: Fixed max heights so the box doesn't grow off-screen */
+    /* 徴 FIX: Fixed max heights so the box doesn't grow off-screen */
     height: 75vh; 
     max-height: 600px; 
     
@@ -482,12 +604,12 @@
     display: flex; flex-direction: column; gap: 15px;
     background: transparent;
     
-    /* 💥 FIX: Enables scrolling inside the body */
+    /* 徴 FIX: Enables scrolling inside the body */
     flex: 1; 
     overflow-y: auto; 
 }
 
-/* 💥 FIX: Custom Scrollbar for Chat */
+/* 徴 FIX: Custom Scrollbar for Chat */
 .ria-chat-body::-webkit-scrollbar {
     width: 5px;
 }
@@ -519,7 +641,7 @@
     display: flex; align-items: center; gap: 10px;
     padding: 16px 20px; background: rgba(0,0,0,0.2);
     border-top: 1px solid rgba(255,255,255,0.05);
-    flex-shrink: 0; /* 💥 FIX: Prevents footer from getting pushed off */
+    flex-shrink: 0; /* 徴 FIX: Prevents footer from getting pushed off */
 }
 
 .chat-input {
