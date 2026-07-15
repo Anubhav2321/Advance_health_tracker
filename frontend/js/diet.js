@@ -1,5 +1,5 @@
 // ==========================================
-// BioNexus: AI Diet System Logic
+// BioNexus: AI Diet System + Nutrition Coach
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -282,5 +282,305 @@ document.addEventListener('DOMContentLoaded', async () => {
         riaInput.addEventListener('keypress', (e) => { 
             if (e.key === 'Enter') sendRiaMsg(); 
         });
+    }
+
+    // ==========================================
+    // 🍽️ AI NUTRITION COACH — FOOD PHOTO ANALYSIS
+    // ==========================================
+    
+    const cameraScanBtn = document.getElementById('camera-scan-btn');
+    const uploadScanBtn = document.getElementById('upload-scan-btn');
+    const foodUploadInput = document.getElementById('food-upload-input');
+    const imagePreviewArea = document.getElementById('image-preview-area');
+    const previewImage = document.getElementById('preview-image');
+    const analyzeFoodBtn = document.getElementById('analyze-food-btn');
+    const cancelPreviewBtn = document.getElementById('cancel-preview-btn');
+    const scannerLoading = document.getElementById('scanner-loading');
+    const analysisResults = document.getElementById('analysis-results');
+    
+    // Camera elements
+    const cameraModal = document.getElementById('camera-modal');
+    const cameraVideo = document.getElementById('camera-video');
+    const cameraCanvas = document.getElementById('camera-canvas');
+    const cameraCaptureBtn = document.getElementById('camera-capture-btn');
+    const cameraCloseBtn = document.getElementById('camera-close-btn');
+
+    let currentFoodBase64 = null;
+    let currentAnalyzedFood = null;
+    let cameraStream = null;
+
+    // --- Upload Photo ---
+    uploadScanBtn.addEventListener('click', () => {
+        foodUploadInput.click();
+    });
+
+    foodUploadInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            currentFoodBase64 = event.target.result;
+            previewImage.src = currentFoodBase64;
+            imagePreviewArea.classList.add('active');
+            analysisResults.classList.remove('active');
+        };
+        reader.readAsDataURL(file);
+        foodUploadInput.value = ''; // Reset so same file can be re-selected
+    });
+
+    // --- Camera Capture ---
+    cameraScanBtn.addEventListener('click', async () => {
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } 
+            });
+            cameraVideo.srcObject = cameraStream;
+            cameraModal.classList.add('active');
+        } catch (err) {
+            console.error("Camera access error:", err);
+            alert("Camera access denied. Please allow camera access in your browser settings or use the Upload option.");
+        }
+    });
+
+    cameraCaptureBtn.addEventListener('click', () => {
+        // Capture frame from video
+        cameraCanvas.width = cameraVideo.videoWidth;
+        cameraCanvas.height = cameraVideo.videoHeight;
+        const ctx = cameraCanvas.getContext('2d');
+        ctx.drawImage(cameraVideo, 0, 0);
+        
+        currentFoodBase64 = cameraCanvas.toDataURL('image/jpeg', 0.85);
+        previewImage.src = currentFoodBase64;
+        imagePreviewArea.classList.add('active');
+        analysisResults.classList.remove('active');
+
+        // Close camera
+        closeCameraModal();
+    });
+
+    cameraCloseBtn.addEventListener('click', closeCameraModal);
+
+    function closeCameraModal() {
+        cameraModal.classList.remove('active');
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+        }
+    }
+
+    // --- Cancel Preview ---
+    cancelPreviewBtn.addEventListener('click', () => {
+        imagePreviewArea.classList.remove('active');
+        analysisResults.classList.remove('active');
+        currentFoodBase64 = null;
+        currentAnalyzedFood = null;
+    });
+
+    // --- Analyze Food ---
+    analyzeFoodBtn.addEventListener('click', async () => {
+        if (!currentFoodBase64) return;
+
+        imagePreviewArea.classList.remove('active');
+        scannerLoading.classList.add('active');
+        analysisResults.classList.remove('active');
+
+        try {
+            const response = await fetch('/api/diet/analyze-food', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_email: userEmail,
+                    image_base64: currentFoodBase64
+                })
+            });
+
+            const result = await response.json();
+            scannerLoading.classList.remove('active');
+
+            if (result.status === "success" && result.data) {
+                currentAnalyzedFood = result.data;
+                renderAnalysisResults(result.data);
+            } else {
+                analysisResults.innerHTML = `
+                    <div style="text-align:center;padding:20px;color:#ff6b6b;font-size:0.85rem;">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size:1.5rem;margin-bottom:8px;display:block;"></i>
+                        ${result.message || 'Analysis failed. Please try with a clearer image.'}
+                    </div>`;
+                analysisResults.classList.add('active');
+            }
+        } catch (error) {
+            console.error("Food analysis error:", error);
+            scannerLoading.classList.remove('active');
+            analysisResults.innerHTML = `
+                <div style="text-align:center;padding:20px;color:#ff6b6b;font-size:0.85rem;">
+                    <i class="fa-solid fa-wifi" style="font-size:1.5rem;margin-bottom:8px;display:block;"></i>
+                    Connection failed. Please check your network.
+                </div>`;
+            analysisResults.classList.add('active');
+        }
+    });
+
+    // --- Render Analysis Results ---
+    function renderAnalysisResults(data) {
+        const ratingClass = data.health_rating >= 7 ? 'good' : data.health_rating >= 4 ? 'mid' : 'bad';
+        
+        // Calculate macro percentages for bars (out of a reasonable daily max)
+        const calPct = Math.min((data.calories / targetCalories) * 100, 100);
+        const proPct = Math.min((data.protein / 150) * 100, 100);
+        const carbPct = Math.min((data.carbs / 300) * 100, 100);
+        const fatPct = Math.min((data.fat / 80) * 100, 100);
+
+        let pointsHtml = '';
+        if (data.points && Array.isArray(data.points)) {
+            pointsHtml = data.points.map((point, i) => `
+                <div class="analysis-point">
+                    <div class="point-num">${i + 1}</div>
+                    <div>${point}</div>
+                </div>
+            `).join('');
+        }
+
+        analysisResults.innerHTML = `
+            <div class="analysis-food-header">
+                <div>
+                    <div class="analysis-food-name">${data.food_name || 'Unknown Food'}</div>
+                    <div class="analysis-food-desc">${data.description || ''}</div>
+                    ${data.serving_size ? `<div style="font-size:0.7rem;color:var(--accent-orange);margin-top:4px;"><i class="fa-solid fa-plate-wheat"></i> ${data.serving_size}</div>` : ''}
+                </div>
+                <div class="health-rating ${ratingClass}">
+                    <div class="rating-num">${data.health_rating || '?'}</div>
+                    <div class="rating-label">/ 10</div>
+                </div>
+            </div>
+
+            <div class="macro-grid">
+                <div class="macro-item macro-cal">
+                    <div class="macro-item-header">
+                        <span class="macro-item-label">Calories</span>
+                        <span class="macro-item-value">${data.calories || 0} kcal</span>
+                    </div>
+                    <div class="macro-bar"><div class="macro-bar-fill" id="bar-cal"></div></div>
+                </div>
+                <div class="macro-item macro-pro">
+                    <div class="macro-item-header">
+                        <span class="macro-item-label">Protein</span>
+                        <span class="macro-item-value">${data.protein || 0}g</span>
+                    </div>
+                    <div class="macro-bar"><div class="macro-bar-fill" id="bar-pro"></div></div>
+                </div>
+                <div class="macro-item macro-carb">
+                    <div class="macro-item-header">
+                        <span class="macro-item-label">Carbs</span>
+                        <span class="macro-item-value">${data.carbs || 0}g</span>
+                    </div>
+                    <div class="macro-bar"><div class="macro-bar-fill" id="bar-carb"></div></div>
+                </div>
+                <div class="macro-item macro-fat">
+                    <div class="macro-item-header">
+                        <span class="macro-item-label">Fat</span>
+                        <span class="macro-item-value">${data.fat || 0}g</span>
+                    </div>
+                    <div class="macro-bar"><div class="macro-bar-fill" id="bar-fat"></div></div>
+                </div>
+            </div>
+
+            ${data.fiber !== undefined || data.sugar !== undefined ? `
+                <div style="display:flex;gap:8px;margin-bottom:12px;">
+                    ${data.fiber !== undefined ? `<div style="flex:1;background:rgba(0,0,0,0.2);padding:8px 10px;border-radius:8px;font-size:0.78rem;">
+                        <span style="color:var(--text-secondary);">Fiber</span>
+                        <span style="float:right;font-weight:600;color:var(--accent-green);">${data.fiber}g</span>
+                    </div>` : ''}
+                    ${data.sugar !== undefined ? `<div style="flex:1;background:rgba(0,0,0,0.2);padding:8px 10px;border-radius:8px;font-size:0.78rem;">
+                        <span style="color:var(--text-secondary);">Sugar</span>
+                        <span style="float:right;font-weight:600;color:var(--accent-pink);">${data.sugar}g</span>
+                    </div>` : ''}
+                </div>
+            ` : ''}
+
+            ${pointsHtml ? `
+                <div class="analysis-points">
+                    <h4><i class="fa-solid fa-clipboard-list"></i> Food Analysis</h4>
+                    ${pointsHtml}
+                </div>
+            ` : ''}
+
+            <button class="log-analyzed-btn" id="log-analyzed-food-btn">
+                <i class="fa-solid fa-plus-circle"></i> Log This Food
+            </button>
+        `;
+
+        analysisResults.classList.add('active');
+
+        // Animate macro bars after render
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                const barCal = document.getElementById('bar-cal');
+                const barPro = document.getElementById('bar-pro');
+                const barCarb = document.getElementById('bar-carb');
+                const barFat = document.getElementById('bar-fat');
+                if (barCal) barCal.style.width = calPct + '%';
+                if (barPro) barPro.style.width = proPct + '%';
+                if (barCarb) barCarb.style.width = carbPct + '%';
+                if (barFat) barFat.style.width = fatPct + '%';
+            }, 100);
+        });
+
+        // Log analyzed food button
+        const logAnalyzedBtn = document.getElementById('log-analyzed-food-btn');
+        if (logAnalyzedBtn) {
+            logAnalyzedBtn.addEventListener('click', async () => {
+                if (!currentAnalyzedFood) return;
+
+                const postData = {
+                    user_email: userEmail,
+                    date: today,
+                    meal_type: "Snacks", // Default, can be improved with a selector
+                    items: [{
+                        food_name: currentAnalyzedFood.food_name,
+                        calories: Math.round(currentAnalyzedFood.calories || 0),
+                        protein: parseFloat(currentAnalyzedFood.protein || 0),
+                        carbs: parseFloat(currentAnalyzedFood.carbs || 0),
+                        fats: parseFloat(currentAnalyzedFood.fat || 0)
+                    }],
+                    total_calories: Math.round(currentAnalyzedFood.calories || 0),
+                    total_protein: parseFloat(currentAnalyzedFood.protein || 0),
+                    total_carbs: parseFloat(currentAnalyzedFood.carbs || 0),
+                    total_fats: parseFloat(currentAnalyzedFood.fat || 0)
+                };
+
+                try {
+                    logAnalyzedBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Logging...';
+                    logAnalyzedBtn.disabled = true;
+
+                    const response = await fetch('/api/diet/log', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(postData)
+                    });
+
+                    if (response.ok) {
+                        logAnalyzedBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Logged Successfully!';
+                        logAnalyzedBtn.style.borderColor = 'var(--accent-green)';
+                        logAnalyzedBtn.style.color = 'var(--accent-green)';
+                        await loadDietData();
+                        
+                        // Reset after 2 seconds
+                        setTimeout(() => {
+                            analysisResults.classList.remove('active');
+                            currentAnalyzedFood = null;
+                            currentFoodBase64 = null;
+                        }, 2000);
+                    } else {
+                        logAnalyzedBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Failed to Log';
+                        logAnalyzedBtn.disabled = false;
+                    }
+                } catch (error) {
+                    console.error("Log food error:", error);
+                    logAnalyzedBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Network Error';
+                    logAnalyzedBtn.disabled = false;
+                }
+            });
+        }
     }
 });

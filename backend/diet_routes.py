@@ -3,8 +3,10 @@ from pydantic import BaseModel
 from typing import List, Optional
 import logging
 import os
+import json
+import base64
 from datetime import datetime
-from groq import AsyncGroq
+from groq import AsyncGroq, Groq
 from backend.database import Database
 
 router = APIRouter()
@@ -37,6 +39,10 @@ class AIWarningRequest(BaseModel):
 class RIADietChat(BaseModel):
     user_email: str
     user_message: str
+
+class FoodAnalysisRequest(BaseModel):
+    user_email: str
+    image_base64: str
 
 # ==========================================
 # HYBRID FOOD DATABASE (MOCK)
@@ -231,3 +237,132 @@ async def ria_diet_consult(req: RIADietChat):
     except Exception as e:
         logger.error(f"RIA Consult Error: {e}")
         return {"status": "error", "reply": "Connection lost. Try again! 📡"}
+
+
+# ==========================================
+# 🍽️ AI NUTRITION COACH — FOOD PHOTO ANALYSIS
+# ==========================================
+def get_sync_groq_client():
+    groq_api_key = os.environ.get("GROQ_API_KEY", "YOUR_GROQ_API_KEY_HERE")
+    if groq_api_key == "YOUR_GROQ_API_KEY_HERE":
+        return None
+    return Groq(api_key=groq_api_key)
+
+@router.post("/analyze-food")
+async def analyze_food_photo(req: FoodAnalysisRequest):
+    """
+    AI Nutrition Coach: Accepts a base64-encoded food image,
+    uses Groq Vision model to identify the food and provide
+    detailed nutritional analysis with health rating.
+    """
+    try:
+        client = get_sync_groq_client()
+        if not client:
+            return {"status": "error", "message": "API key required for Food Analysis."}
+
+        # Prepare the image for the vision model
+        # Clean the base64 string (remove data URL prefix if present)
+        image_data = req.image_base64
+        if "," in image_data:
+            image_data = image_data.split(",")[1]
+
+        analysis_prompt = """
+You are an expert AI nutritionist and food analyst. Analyze this food image carefully.
+
+You MUST respond ONLY with a valid JSON object (no markdown, no extra text, no code fences). Use this exact format:
+
+{
+  "food_name": "Name of the food/dish",
+  "description": "Brief 1-2 sentence description of the food",
+  "calories": 350,
+  "protein": 15.5,
+  "carbs": 45.0,
+  "fat": 12.0,
+  "fiber": 3.5,
+  "sugar": 8.0,
+  "health_rating": 7,
+  "serving_size": "1 plate (approx 300g)",
+  "points": [
+    "Point 1 about the food",
+    "Point 2 about nutritional value",
+    "Point 3 about health benefits or concerns",
+    "Point 4 about who should eat/avoid this",
+    "Point 5 about best time to consume"
+  ]
+}
+
+Rules:
+- Calories in kcal (integer)
+- Protein, carbs, fat, fiber, sugar in grams (float)
+- health_rating: 1-10 (10 = very healthy, 1 = very unhealthy)
+- serving_size: typical single serving
+- points: exactly 5 descriptive points about the food
+- Be accurate with nutritional estimates based on typical serving sizes
+- If you cannot identify the food, set food_name to "Unknown Food" and estimate generically
+"""
+
+        try:
+            completion = client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": analysis_prompt
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image_data}"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                model="llama-3.2-90b-vision-preview",
+                temperature=0.3,
+                max_tokens=800
+            )
+            
+            raw_response = completion.choices[0].message.content.strip()
+            
+            # Clean up response — remove markdown fences if present
+            if raw_response.startswith("```"):
+                raw_response = raw_response.split("\n", 1)[1] if "\n" in raw_response else raw_response[3:]
+                if raw_response.endswith("```"):
+                    raw_response = raw_response[:-3]
+                raw_response = raw_response.strip()
+            
+            food_data = json.loads(raw_response)
+            return {"status": "success", "data": food_data}
+            
+        except json.JSONDecodeError:
+            # If vision model returns non-JSON, try a text-based fallback
+            logger.warning(f"Vision model returned non-JSON: {raw_response[:200]}")
+            return {
+                "status": "success",
+                "data": {
+                    "food_name": "Analyzed Food",
+                    "description": raw_response[:200],
+                    "calories": 250,
+                    "protein": 10.0,
+                    "carbs": 30.0,
+                    "fat": 10.0,
+                    "fiber": 3.0,
+                    "sugar": 5.0,
+                    "health_rating": 5,
+                    "serving_size": "1 serving",
+                    "points": [
+                        "AI was unable to parse detailed analysis",
+                        "Nutritional values are rough estimates",
+                        "Consider manual entry for accuracy",
+                        "Try with a clearer image for better results",
+                        "Ensure the food is clearly visible in the photo"
+                    ]
+                }
+            }
+            
+    except Exception as e:
+        logger.error(f"Food Analysis Error: {e}")
+        return {"status": "error", "message": f"Food analysis failed: {str(e)}"}

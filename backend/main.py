@@ -46,8 +46,9 @@ ALGORITHM = "HS256"
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 
-# FIX: Updated to LIVE Render URL
-REDIRECT_URI = "https://bionexus-live.onrender.com/api/auth/google/callback"
+# For LOCAL testing, use localhost. Switch to Render URL before deploying.
+# RENDER_URI = "https://bionexus-live.onrender.com/api/auth/google/callback"
+REDIRECT_URI = "http://localhost:8000/api/auth/google/callback"
 
 # ==========================================
 # CORE SECURITY FUNCTIONS
@@ -137,6 +138,7 @@ FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 
 app.mount("/css", StaticFiles(directory=os.path.join(FRONTEND_DIR, "css")), name="css")
 app.mount("/js", StaticFiles(directory=os.path.join(FRONTEND_DIR, "js")), name="js")
+app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIR, "assets")), name="assets")
 
 @app.get("/", tags=["UI Routes"])
 async def serve_intro(): return FileResponse(os.path.join(FRONTEND_DIR, "intro.html"))
