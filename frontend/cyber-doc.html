@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 🚨 FIX: Mobile Browser Zoom Issue -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BioNexus | Cyber-Doc AI — Premium Medical Diagnostics</title>
     <meta name="description" content="BioNexus Cyber-Doc AI Core: Your premium AI doctor with voice assistant, multi-language support, and real clinical diagnosis.">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,7 +16,11 @@
             background-color: #08090d;
             color: #f8f9fa;
             font-family: 'Inter', sans-serif;
-            height: 100vh;
+            
+            /* 🚨 FIX: Mobile Browser URL Bar Issue */
+            height: 100dvh; 
+            min-height: -webkit-fill-available; /* Fallback for iOS Safari */
+            
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -187,8 +192,6 @@
             width: 92%;
             border-radius: 12px;
         }
-
-        /* (TTS removed) */
 
         /* ===== TYPING INDICATOR ===== */
         .typing-indicator {
