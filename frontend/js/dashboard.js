@@ -57,33 +57,53 @@ document.addEventListener('DOMContentLoaded', () => {
     if (profileInitial && userName) profileInitial.innerText = userName.charAt(0).toUpperCase();
 
     // ==========================================
+    // THEME LOADER — Apply saved theme instantly
+    // ==========================================
+    (function applyStoredTheme() {
+        const root = document.documentElement;
+        const savedMode = localStorage.getItem('bionexus_theme_mode') || 'dark';
+        const savedAccent = localStorage.getItem('bionexus_theme_accent') || 'cyan';
+        const accentMap = { cyan: '#00f3ff', purple: '#9d4edd', green: '#00ff87', orange: '#ff9d00' };
+        if (accentMap[savedAccent]) {
+            root.style.setProperty('--accent-cyan', savedAccent === 'cyan' ? '#00f3ff' : accentMap[savedAccent]);
+            root.style.setProperty('--accent-master', accentMap[savedAccent]);
+        }
+        if (savedMode === 'light') {
+            root.style.setProperty('--bg-dark', '#f0f2f5');
+            root.style.setProperty('--surface-dark', '#ffffff');
+            root.style.setProperty('--text-primary', '#181b21');
+            root.style.setProperty('--text-secondary', '#5a5f6b');
+        }
+    })();
+
+    // ==========================================
     // DATA FETCHING (UNLOCKED)
     // ==========================================
     async function loadDashboardData() {
         try {
             const today = new Date().toISOString().split('T')[0];
             
-            const [profileRes, logRes] = await Promise.all([
+            const [profileRes, logRes, dietRes] = await Promise.all([
                 fetch(`/api/profile/${userEmail}`),
-                fetch(`/api/health-log/${userEmail}?target_date=${today}`)
+                fetch(`/api/health-log/${userEmail}?target_date=${today}`),
+                fetch(`/api/diet/today/${userEmail}`)
             ]);
 
             const profileResult = await profileRes.json();
             const logResult = await logRes.json();
+            const dietResult = await dietRes.json();
 
-            let targetCalories = 2000; 
+            let targetCalories = 2000;
+            let targetProtein = 0, targetCarbs = 0, targetFats = 0, targetWater = 0;
 
-            // 💥 THE FIX: Removed the "is_onboarded" restriction! Now it ALWAYS shows data.
             if (profileResult.status === "success" && profileResult.data) {
                 const profile = profileResult.data;
                 
                 targetCalories = profile.target_calories || 2000;
-                
-                // Force UI to update with whatever data is in the database
-                document.getElementById('ui-protein').innerText = `${profile.target_protein_g || 0}g`;
-                document.getElementById('ui-carbs').innerText = `${profile.target_carbs_g || 0}g`;
-                document.getElementById('ui-fats').innerText = `${profile.target_fats_g || 0}g`;
-                document.getElementById('ui-macro-water').innerText = `${profile.target_water_l || 0}L`;
+                targetProtein = profile.target_protein_g || 0;
+                targetCarbs = profile.target_carbs_g || 0;
+                targetFats = profile.target_fats_g || 0;
+                targetWater = profile.target_water_l || 0;
 
                 let goalBadge = document.getElementById('ui-goal-badge');
                 if (goalBadge && profile.goal) {
@@ -91,47 +111,74 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // ==========================================
-                // 💥 NEW: PROFILE PICTURE LOGIC & BLURRY FIX
+                // PROFILE PICTURE LOGIC & BLURRY FIX
                 // ==========================================
                 const profileBtn = document.getElementById('profile-btn');
                 
                 if (profile.profile_image && profile.profile_image.trim() !== "") {
                     let highResImg = profile.profile_image;
-                    
-                    // If image is from Google, replace the small size (=s96-c) with high resolution (=s400-c)
                     if (highResImg.includes('googleusercontent.com')) {
                         highResImg = highResImg.replace(/=s\d+-c/g, '=s400-c');
                     }
-                    
                     profileBtn.innerHTML = `<img src="${highResImg}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-cyan); display: block;">`;
                 } else {
-                    // Fallback to Name Initial if no picture is available
                     profileBtn.innerHTML = `<span id="profile-initial">${userName.charAt(0).toUpperCase()}</span>`;
                 }
             }
 
-            // --- SET DAILY HEALTH LOGS ---
+            // --- DIET DATA: Real consumed macros ---
+            let consumedProtein = 0, consumedCarbs = 0, consumedFats = 0, consumedCalories = 0;
+            
+            if (dietResult.status === "success" && dietResult.data) {
+                consumedProtein = dietResult.data.daily_total_protein || 0;
+                consumedCarbs = dietResult.data.daily_total_carbs || 0;
+                consumedFats = dietResult.data.daily_total_fats || 0;
+                consumedCalories = dietResult.data.daily_total_calories || 0;
+            }
+
+            // Also add health log calories if present
+            let healthLogCal = 0;
+            let loggedWater = 0;
             if (logResult.status === "success" && logResult.data) {
                 const log = logResult.data;
-                const consumedCalories = log.calories || 0;
-                let remainingCalories = targetCalories - consumedCalories;
-                
-                document.getElementById('val-calories').innerText = remainingCalories > 0 ? remainingCalories : 0;
+                healthLogCal = log.calories || 0;
+                loggedWater = log.water_liters || 0;
                 
                 document.getElementById('val-steps').innerText = log.steps || 0;
-                document.getElementById('val-water').innerText = log.water_liters || 0;
+                document.getElementById('val-water').innerText = loggedWater;
                 document.getElementById('val-sleep').innerText = log.sleep_hours || 0;
                 
                 let burnedKcal = Math.round((log.steps || 0) * 0.04);
                 document.getElementById('val-move').innerText = burnedKcal;
-
-                // Visual Progress Bar Logic
-                let progressPercent = Math.min((consumedCalories / targetCalories) * 100, 100) || 0;
-                document.getElementById('bar-protein').style.width = `${progressPercent}%`;
-                document.getElementById('bar-carbs').style.width = `${progressPercent}%`;
-                document.getElementById('bar-fats').style.width = `${progressPercent}%`;
-                document.getElementById('bar-water').style.width = `${progressPercent}%`;
             }
+
+            // Use diet calories if available, else health log calories
+            let totalConsumed = consumedCalories > 0 ? consumedCalories : healthLogCal;
+            let remainingCalories = Math.max(targetCalories - totalConsumed, 0);
+
+            // --- Update Calorie Circle ---
+            document.getElementById('val-calories').innerText = remainingCalories;
+            let calPercent = Math.min((totalConsumed / targetCalories) * 100, 100) || 0;
+            const calorieCircle = document.querySelector('.calorie-circle');
+            if (calorieCircle) {
+                calorieCircle.style.background = `conic-gradient(var(--accent-cyan) ${calPercent}%, rgba(255,255,255,0.05) 0)`;
+            }
+
+            // --- Update Macro Progress Bars with REAL consumed/target ---
+            const proteinPct = targetProtein > 0 ? Math.min((consumedProtein / targetProtein) * 100, 100) : 0;
+            const carbsPct = targetCarbs > 0 ? Math.min((consumedCarbs / targetCarbs) * 100, 100) : 0;
+            const fatsPct = targetFats > 0 ? Math.min((consumedFats / targetFats) * 100, 100) : 0;
+            const waterPct = targetWater > 0 ? Math.min((loggedWater / targetWater) * 100, 100) : 0;
+
+            document.getElementById('ui-protein').innerText = `${Math.round(consumedProtein)}/${targetProtein}g`;
+            document.getElementById('ui-carbs').innerText = `${Math.round(consumedCarbs)}/${targetCarbs}g`;
+            document.getElementById('ui-fats').innerText = `${Math.round(consumedFats)}/${targetFats}g`;
+            document.getElementById('ui-macro-water').innerText = `${loggedWater}/${targetWater}L`;
+
+            document.getElementById('bar-protein').style.width = `${proteinPct}%`;
+            document.getElementById('bar-carbs').style.width = `${carbsPct}%`;
+            document.getElementById('bar-fats').style.width = `${fatsPct}%`;
+            document.getElementById('bar-water').style.width = `${waterPct}%`;
 
         } catch (error) {
             console.error("Failed to fetch real data from backend:", error);

@@ -155,20 +155,8 @@ function appendBotMessage(text) {
     
     msgDiv.innerHTML = formatted;
 
-    // Add TTS button
-    const ttsBtn = document.createElement("button");
-    ttsBtn.className = "msg-tts-btn";
-    ttsBtn.innerHTML = '<i class="fa-solid fa-volume-up"></i>';
-    ttsBtn.title = "Read aloud";
-    ttsBtn.onclick = () => speakText(text, ttsBtn);
-    msgDiv.appendChild(ttsBtn);
-    msgDiv.style.paddingBottom = "26px"; // space for TTS button
-
     chatBox.insertBefore(msgDiv, typingIndicator);
     chatBox.scrollTop = chatBox.scrollHeight;
-
-    // Auto-speak the response
-    speakText(text);
 }
 
 function formatMedicalResponse(text) {
@@ -321,7 +309,7 @@ function startMediaRecorderFallback() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             email: userEmail,
-                            audio_base64: base64Audio.split(',')[1], // Remove data URL prefix
+                            audio_base64: base64Audio.split(',')[1],
                             language: currentLanguage
                         })
                     });
@@ -380,61 +368,4 @@ function blobToBase64(blob) {
         reader.onerror = reject;
         reader.readAsDataURL(blob);
     });
-}
-
-// ==========================================
-// TEXT-TO-SPEECH (TTS)
-// ==========================================
-let currentUtterance = null;
-
-function speakText(text, buttonElement = null) {
-    // Cancel any ongoing speech
-    if (window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel();
-        // If clicking the same button, just stop
-        if (buttonElement && buttonElement.classList.contains('speaking')) {
-            buttonElement.classList.remove('speaking');
-            return;
-        }
-    }
-
-    // Clean text for TTS (remove emojis and formatting)
-    let cleanText = text
-        .replace(/[📋💊🍽️⚠️📌🎤✅❌🔴🟢🟡]/g, '')
-        .replace(/\*\*/g, '')
-        .replace(/[▸•\-]/g, ',')
-        .replace(/\n+/g, '. ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-    if (!cleanText) return;
-
-    const langConfig = LANGUAGE_CONFIG[currentLanguage] || LANGUAGE_CONFIG.english;
-    
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = langConfig.ttsLang;
-    utterance.rate = 0.95;
-    utterance.pitch = 1;
-    utterance.volume = 0.9;
-
-    // Try to find a matching voice
-    const voices = window.speechSynthesis.getVoices();
-    const matchingVoice = voices.find(v => v.lang.startsWith(langConfig.ttsLang.split('-')[0]));
-    if (matchingVoice) utterance.voice = matchingVoice;
-
-    if (buttonElement) {
-        buttonElement.classList.add('speaking');
-        utterance.onend = () => buttonElement.classList.remove('speaking');
-        utterance.onerror = () => buttonElement.classList.remove('speaking');
-    }
-
-    currentUtterance = utterance;
-    window.speechSynthesis.speak(utterance);
-}
-
-// Preload voices
-if (window.speechSynthesis) {
-    window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.getVoices();
-    };
 }

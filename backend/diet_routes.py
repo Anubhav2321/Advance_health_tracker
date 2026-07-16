@@ -301,65 +301,82 @@ Rules:
 - If you cannot identify the food, set food_name to "Unknown Food" and estimate generically
 """
 
+        # List of vision models to try (in priority order)
+        VISION_MODELS = [
+            "meta-llama/llama-4-scout-17b-16e-instruct",
+            "llama-3.2-90b-vision-preview",
+            "llama-3.2-11b-vision-preview",
+        ]
+        
+        raw_response = None
+        vision_success = False
+        
+        for model_id in VISION_MODELS:
+            try:
+                completion = client.chat.completions.create(
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": analysis_prompt},
+                                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
+                            ]
+                        }
+                    ],
+                    model=model_id,
+                    temperature=0.3,
+                    max_tokens=800
+                )
+                raw_response = completion.choices[0].message.content.strip()
+                vision_success = True
+                logger.info(f"Vision analysis succeeded with model: {model_id}")
+                break
+            except Exception as model_err:
+                logger.warning(f"Vision model {model_id} failed: {model_err}")
+                continue
+        
+        # Fallback: If ALL vision models fail, use text-based LLM to estimate
+        if not vision_success:
+            logger.warning("All vision models failed. Using text-based fallback.")
+            try:
+                fallback_prompt = """You are a nutrition expert. A user uploaded a food photo but the vision model is unavailable.
+Based on a typical mixed meal, provide a reasonable nutritional estimate.
+Respond ONLY with valid JSON (no markdown, no extra text):
+{"food_name":"Estimated Meal","description":"Vision unavailable - generic estimate for a typical meal","calories":400,"protein":15.0,"carbs":50.0,"fat":15.0,"fiber":4.0,"sugar":8.0,"health_rating":5,"serving_size":"1 plate (approx 300g)","points":["Vision model unavailable - values are estimates","Log manually for accurate tracking","Try again later for AI-powered analysis","Estimates based on average meal composition","Consider using the search feature for precise data"]}"""
+                fallback_completion = client.chat.completions.create(
+                    messages=[{"role": "user", "content": fallback_prompt}],
+                    model="llama-3.3-70b-versatile",
+                    temperature=0.3,
+                    max_tokens=400
+                )
+                raw_response = fallback_completion.choices[0].message.content.strip()
+            except Exception as fb_err:
+                logger.error(f"Fallback also failed: {fb_err}")
+                return {"status": "error", "message": "All AI models are currently unavailable. Please try again later."}
+
+        # Clean up response — remove markdown fences if present
+        if raw_response.startswith("```"):
+            raw_response = raw_response.split("\n", 1)[1] if "\n" in raw_response else raw_response[3:]
+            if raw_response.endswith("```"):
+                raw_response = raw_response[:-3]
+            raw_response = raw_response.strip()
+        
         try:
-            completion = client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": analysis_prompt
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{image_data}"
-                                }
-                            }
-                        ]
-                    }
-                ],
-                model="llama-3.2-90b-vision-preview",
-                temperature=0.3,
-                max_tokens=800
-            )
-            
-            raw_response = completion.choices[0].message.content.strip()
-            
-            # Clean up response — remove markdown fences if present
-            if raw_response.startswith("```"):
-                raw_response = raw_response.split("\n", 1)[1] if "\n" in raw_response else raw_response[3:]
-                if raw_response.endswith("```"):
-                    raw_response = raw_response[:-3]
-                raw_response = raw_response.strip()
-            
             food_data = json.loads(raw_response)
             return {"status": "success", "data": food_data}
-            
         except json.JSONDecodeError:
-            # If vision model returns non-JSON, try a text-based fallback
-            logger.warning(f"Vision model returned non-JSON: {raw_response[:200]}")
+            logger.warning(f"Model returned non-JSON: {raw_response[:200]}")
             return {
                 "status": "success",
                 "data": {
                     "food_name": "Analyzed Food",
-                    "description": raw_response[:200],
-                    "calories": 250,
-                    "protein": 10.0,
-                    "carbs": 30.0,
-                    "fat": 10.0,
-                    "fiber": 3.0,
-                    "sugar": 5.0,
-                    "health_rating": 5,
+                    "description": raw_response[:200] if raw_response else "Analysis completed",
+                    "calories": 250, "protein": 10.0, "carbs": 30.0, "fat": 10.0,
+                    "fiber": 3.0, "sugar": 5.0, "health_rating": 5,
                     "serving_size": "1 serving",
-                    "points": [
-                        "AI was unable to parse detailed analysis",
-                        "Nutritional values are rough estimates",
-                        "Consider manual entry for accuracy",
-                        "Try with a clearer image for better results",
-                        "Ensure the food is clearly visible in the photo"
-                    ]
+                    "points": ["AI returned unstructured analysis", "Nutritional values are rough estimates",
+                               "Consider manual entry for accuracy", "Try with a clearer image",
+                               "Ensure the food is clearly visible in the photo"]
                 }
             }
             

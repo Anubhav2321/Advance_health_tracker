@@ -85,6 +85,14 @@
                     <h3 id="ui-avg-cal">0</h3>
                     <p>Avg Cal/Day</p>
                 </div>
+                <div class="sum-card glow-green">
+                    <h3 id="ui-total-workouts">0</h3>
+                    <p>Workouts</p>
+                </div>
+                <div class="sum-card glow-cyan">
+                    <h3 id="ui-avg-sleep">0</h3>
+                    <p>Avg Sleep (hrs)</p>
+                </div>
             </div>
 
             <div class="chart-container">
@@ -96,6 +104,23 @@
                 <div class="chart-title"><i class="fa-solid fa-dumbbell" style="color: var(--accent-purple);"></i> Workout Volume (Kg)</div>
                 <canvas id="volumeChart" height="200"></canvas>
             </div>
+
+            <div class="chart-container">
+                <div class="chart-title"><i class="fa-solid fa-shoe-prints" style="color: var(--accent-green);"></i> Steps Trend</div>
+                <canvas id="stepsChart" height="200"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title"><i class="fa-solid fa-moon" style="color: #c084fc;"></i> Sleep Pattern (hrs)</div>
+                <canvas id="sleepChart" height="200"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title"><i class="fa-solid fa-glass-water" style="color: #38bdf8;"></i> Water Intake (L)</div>
+                <canvas id="waterChart" height="200"></canvas>
+            </div>
+
+            <div style="text-align:center;font-size:0.7rem;color:var(--text-secondary);padding:5px 0;" id="stats-refresh-time">Last updated: --</div>
 
         </div>
     </div>
