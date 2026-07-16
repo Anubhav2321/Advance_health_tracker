@@ -48,7 +48,7 @@ GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 
 # For LOCAL testing, use localhost. Switch to Render URL before deploying.
 # RENDER_URI = "https://bionexus-live.onrender.com/api/auth/google/callback"
-REDIRECT_URI = "http://localhost:8000/api/auth/google/callback"
+REDIRECT_URI = "https://bionexus-live.onrender.com/api/auth/google/callback"
 
 # ==========================================
 # CORE SECURITY FUNCTIONS

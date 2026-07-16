@@ -98,7 +98,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 2. Dynamic Google Login Initialization ---
+    // --- 🌟 NEW: Direct Google Login Button Animation (Added without removing old code) ---
+    const directGoogleBtn = document.querySelector('.btn-google');
+    if (directGoogleBtn) {
+        directGoogleBtn.addEventListener('click', () => {
+            showLoading("Connecting to Google...");
+        });
+    }
+
+    // --- 2. Dynamic Google Login Initialization (Kept as requested) ---
     async function initGoogleAuth() {
         try {
             // Fetch Client ID from our backend (which hides it safely in .env)
@@ -113,10 +121,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 // Render the button inside the placeholder container
-                google.accounts.id.renderButton(
-                    document.getElementById("google-btn-container"),
-                    { theme: "outline", size: "large", type: "standard" }
-                );
+                const googleBtnContainer = document.getElementById("google-btn-container");
+                if (googleBtnContainer) {
+                    google.accounts.id.renderButton(
+                        googleBtnContainer,
+                        { theme: "outline", size: "large", type: "standard" }
+                    );
+                }
             }
         } catch (error) {
             console.error("Failed to load Google Config:", error);
@@ -125,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initGoogleAuth();
 
-    // --- 3. Google Sign-In Logic (Global Function) ---
+    // --- 3. Google Sign-In Logic (Global Function) (Kept as requested) ---
     // Exposed globally so the Google Script can trigger it
     window.handleGoogleLogin = async function(response) {
         showLoading("Verifying Google Identity...");
