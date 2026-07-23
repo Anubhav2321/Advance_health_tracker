@@ -386,21 +386,22 @@ https://bionexus-live.onrender.com
 - 💪 Workout Planner
 - 📱 Responsive Web Application
 - ☁️ Cloud Deployment on Render
+- 🧠 AI Symptom Prediction
+- 🩺 Doctor Consultation
+- 📅 Medicine Reminder
+- 🥗 AI Nutrition Coach
+- 🌍 Multi-language Support
+- 📤 PDF Health Reports
 
 ---
 
 # 🗺️ Future Roadmap
 
-- 🧠 AI Symptom Prediction
 - ❤️ Heart Rate Monitoring
 - ⌚ Smartwatch Integration
-- 🩺 Doctor Consultation
-- 📅 Medicine Reminder
-- 🥗 AI Nutrition Coach
 - 📈 Health Analytics
 - 🎤 Voice Assistant
-- 🌍 Multi-language Support
-- 📤 PDF Health Reports
+
 
 ---
 
