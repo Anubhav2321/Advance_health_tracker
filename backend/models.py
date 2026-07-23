@@ -54,6 +54,20 @@ class DailyHealthLog(BaseModel):
     sleep_hours: float = Field(default=0.0, ge=0.0, description="Hours of sleep")
     steps: int = Field(default=0, ge=0, description="Total daily steps")
 
+
+class DetailedHealthLog(BaseModel):
+    """
+    Schema for detailed health tracking (mood, energy, weight, heart rate, notes).
+    Stored alongside basic health log data.
+    """
+    user_email: EmailStr = Field(..., description="Links the log to a specific user")
+    log_date: str = Field(..., description="Format: YYYY-MM-DD")
+    mood: Optional[str] = Field(default="okay", description="great, good, okay, low, bad")
+    energy_level: Optional[int] = Field(default=3, ge=1, le=5, description="Energy 1-5")
+    weight_kg: Optional[float] = Field(default=0.0, ge=0.0, description="Daily weight check-in")
+    heart_rate: Optional[int] = Field(default=0, ge=0, description="Resting heart rate BPM")
+    notes: Optional[str] = Field(default="", description="Free-form daily notes")
+
 class AIInsightResponse(BaseModel):
     """ 
     Schema for returning Groq AI generated insights 

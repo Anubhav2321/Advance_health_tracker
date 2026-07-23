@@ -13,22 +13,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (payload.sub) userEmail = payload.sub;
     } catch (e) { window.location.href = '/login'; return; }
 
-    // Apply saved theme
-    (function applyStoredTheme() {
-        const root = document.documentElement;
-        const savedMode = localStorage.getItem('bionexus_theme_mode') || 'dark';
-        const savedAccent = localStorage.getItem('bionexus_theme_accent') || 'cyan';
-        const accentMap = { cyan: '#00f3ff', purple: '#9d4edd', green: '#00ff87', orange: '#ff9d00' };
-        if (accentMap[savedAccent]) {
-            root.style.setProperty('--accent-cyan', savedAccent === 'cyan' ? '#00f3ff' : accentMap[savedAccent]);
-        }
-        if (savedMode === 'light') {
-            root.style.setProperty('--bg-dark', '#f0f2f5');
-            root.style.setProperty('--surface-dark', '#ffffff');
-            root.style.setProperty('--text-primary', '#181b21');
-            root.style.setProperty('--text-secondary', '#5a5f6b');
-        }
-    })();
+    // Theme is applied by theme-loader.js (loaded in HTML <head>)
+    // Read the active accent color for chart usage
+    const accentHex = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#00f3ff';
+    function parseRGB(hex) {
+        const r = parseInt(hex.slice(1,3), 16);
+        const g = parseInt(hex.slice(3,5), 16);
+        const b = parseInt(hex.slice(5,7), 16);
+        return { r, g, b };
+    }
+    const accentRGB = parseRGB(accentHex);
 
     // Chart defaults
     Chart.defaults.color = '#a0a6b1';
@@ -83,12 +77,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     datasets: [{
                         label: 'Calories',
                         data: charts.calories,
-                        borderColor: '#00f3ff',
-                        backgroundColor: createGradient(calCtx, 0, 243, 255),
+                        borderColor: accentHex,
+                        backgroundColor: createGradient(calCtx, accentRGB.r, accentRGB.g, accentRGB.b),
                         fill: true,
                         tension: 0.4,
                         pointRadius: 4,
-                        pointBackgroundColor: '#00f3ff',
+                        pointBackgroundColor: accentHex,
                         borderWidth: 2
                     }]
                 },

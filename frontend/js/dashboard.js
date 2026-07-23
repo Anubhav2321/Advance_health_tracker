@@ -1,8 +1,8 @@
 // ==========================================
-// BioNexus: Main Dashboard UI Interactions
+// BioNexus: Main Dashboard UI + Data Engine
 // ==========================================
 
-// 💥 THE FIX: Secure JWT Parser (Handles Missing Padding Issues)
+// Secure JWT Parser
 function parseJwt(token) {
     try {
         let base64Url = token.split('.')[1];
@@ -19,7 +19,7 @@ function parseJwt(token) {
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- 0. Security & Decode Token ---
+    // --- Security & Token Decode ---
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get('token');
     
@@ -37,10 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let userEmail = ""; 
     let userName = "User"; 
     
-    // 💥 FIX Applied Here: No more atob() crashing!
     const payload = parseJwt(currentToken);
     if (!payload || !payload.sub) {
-        console.error("Token format invalid or expired.");
         localStorage.removeItem('bionexus_token');
         window.location.href = '/login';
         return;
@@ -49,35 +47,37 @@ document.addEventListener('DOMContentLoaded', () => {
     userEmail = payload.sub;
     if (payload.name) userName = payload.name;
 
-    // Set Name & Initial Placeholder (Before DB Fetch)
+    // Set Name & Initial
     const greetingNameElement = document.getElementById('user-greeting-name');
     if (greetingNameElement) greetingNameElement.innerText = userName.split(' ')[0];
     
     const profileInitial = document.getElementById('profile-initial');
     if (profileInitial && userName) profileInitial.innerText = userName.charAt(0).toUpperCase();
 
-    // ==========================================
-    // THEME LOADER — Apply saved theme instantly
-    // ==========================================
-    (function applyStoredTheme() {
-        const root = document.documentElement;
-        const savedMode = localStorage.getItem('bionexus_theme_mode') || 'dark';
-        const savedAccent = localStorage.getItem('bionexus_theme_accent') || 'cyan';
-        const accentMap = { cyan: '#00f3ff', purple: '#9d4edd', green: '#00ff87', orange: '#ff9d00' };
-        if (accentMap[savedAccent]) {
-            root.style.setProperty('--accent-cyan', savedAccent === 'cyan' ? '#00f3ff' : accentMap[savedAccent]);
-            root.style.setProperty('--accent-master', accentMap[savedAccent]);
-        }
-        if (savedMode === 'light') {
-            root.style.setProperty('--bg-dark', '#f0f2f5');
-            root.style.setProperty('--surface-dark', '#ffffff');
-            root.style.setProperty('--text-primary', '#181b21');
-            root.style.setProperty('--text-secondary', '#5a5f6b');
-        }
-    })();
+    // Set current date
+    const dateEl = document.getElementById('current-date');
+    if (dateEl) {
+        const now = new Date();
+        dateEl.innerText = now.toLocaleDateString('en-US', { 
+            weekday: 'long', month: 'long', day: 'numeric' 
+        });
+    }
 
     // ==========================================
-    // DATA FETCHING (UNLOCKED)
+    // SVG CALORIE RING CONSTANTS
+    // ==========================================
+    const RING_CIRCUMFERENCE = 2 * Math.PI * 50; // radius=50 -> 314.16
+    const calorieRing = document.getElementById('calorie-ring');
+
+    function setCalorieRing(percent) {
+        if (!calorieRing) return;
+        const clampedPercent = Math.min(Math.max(percent, 0), 100);
+        const offset = RING_CIRCUMFERENCE - (RING_CIRCUMFERENCE * clampedPercent / 100);
+        calorieRing.style.strokeDashoffset = offset;
+    }
+
+    // ==========================================
+    // DATA FETCHING
     // ==========================================
     async function loadDashboardData() {
         try {
@@ -110,23 +110,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     goalBadge.innerText = profile.goal.replace('_', ' ');
                 }
 
-                // ==========================================
-                // PROFILE PICTURE LOGIC & BLURRY FIX
-                // ==========================================
+                // Profile Picture
                 const profileBtn = document.getElementById('profile-btn');
-                
                 if (profile.profile_image && profile.profile_image.trim() !== "") {
                     let highResImg = profile.profile_image;
                     if (highResImg.includes('googleusercontent.com')) {
                         highResImg = highResImg.replace(/=s\d+-c/g, '=s400-c');
                     }
-                    profileBtn.innerHTML = `<img src="${highResImg}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-cyan); display: block;">`;
+                    profileBtn.innerHTML = `<img src="${highResImg}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color); display: block;">`;
                 } else {
                     profileBtn.innerHTML = `<span id="profile-initial">${userName.charAt(0).toUpperCase()}</span>`;
                 }
             }
 
-            // --- DIET DATA: Real consumed macros ---
+            // --- DIET DATA ---
             let consumedProtein = 0, consumedCarbs = 0, consumedFats = 0, consumedCalories = 0;
             
             if (dietResult.status === "success" && dietResult.data) {
@@ -136,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 consumedCalories = dietResult.data.daily_total_calories || 0;
             }
 
-            // Also add health log calories if present
+            // Health log data
             let healthLogCal = 0;
             let loggedWater = 0;
             if (logResult.status === "success" && logResult.data) {
@@ -144,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 healthLogCal = log.calories || 0;
                 loggedWater = log.water_liters || 0;
                 
-                document.getElementById('val-steps').innerText = log.steps || 0;
+                document.getElementById('val-steps').innerText = (log.steps || 0).toLocaleString();
                 document.getElementById('val-water').innerText = loggedWater;
                 document.getElementById('val-sleep').innerText = log.sleep_hours || 0;
                 
@@ -156,15 +153,14 @@ document.addEventListener('DOMContentLoaded', () => {
             let totalConsumed = consumedCalories > 0 ? consumedCalories : healthLogCal;
             let remainingCalories = Math.max(targetCalories - totalConsumed, 0);
 
-            // --- Update Calorie Circle ---
-            document.getElementById('val-calories').innerText = remainingCalories;
+            // --- Update SVG Calorie Ring ---
+            document.getElementById('val-calories').innerText = remainingCalories.toLocaleString();
             let calPercent = Math.min((totalConsumed / targetCalories) * 100, 100) || 0;
-            const calorieCircle = document.querySelector('.calorie-circle');
-            if (calorieCircle) {
-                calorieCircle.style.background = `conic-gradient(var(--accent-cyan) ${calPercent}%, rgba(255,255,255,0.05) 0)`;
-            }
+            
+            // Animate ring after small delay for visual effect
+            setTimeout(() => setCalorieRing(calPercent), 300);
 
-            // --- Update Macro Progress Bars with REAL consumed/target ---
+            // --- Update Macro Progress Bars ---
             const proteinPct = targetProtein > 0 ? Math.min((consumedProtein / targetProtein) * 100, 100) : 0;
             const carbsPct = targetCarbs > 0 ? Math.min((consumedCarbs / targetCarbs) * 100, 100) : 0;
             const fatsPct = targetFats > 0 ? Math.min((consumedFats / targetFats) * 100, 100) : 0;
@@ -181,14 +177,15 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('bar-water').style.width = `${waterPct}%`;
 
         } catch (error) {
-            console.error("Failed to fetch real data from backend:", error);
+            console.error("Failed to fetch dashboard data:", error);
         }
     }
     
-    // Trigger Data Load Instantly
     loadDashboardData();
 
-    // --- 1. Profile Dropdown & Logout ---
+    // ==========================================
+    // PROFILE DROPDOWN & LOGOUT
+    // ==========================================
     const profileBtn = document.getElementById('profile-btn');
     const profileMenu = document.getElementById('profile-menu');
     const logoutBtn = document.getElementById('logout-btn');
@@ -214,11 +211,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 2. Add Data Modal ---
+    // ==========================================
+    // ENHANCED LOG HEALTH DATA MODAL
+    // ==========================================
     const addDataBtn = document.getElementById('add-data-btn');
     const dataModal = document.getElementById('data-modal');
     const closeDataModalBtn = document.getElementById('close-data-modal');
     const healthForm = document.getElementById('health-form');
+    const detailedForm = document.getElementById('detailed-health-form');
 
     if (addDataBtn) addDataBtn.addEventListener('click', () => dataModal.classList.remove('hidden'));
     if (closeDataModalBtn) closeDataModalBtn.addEventListener('click', () => dataModal.classList.add('hidden'));
@@ -227,18 +227,61 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dataModal && e.target === dataModal) dataModal.classList.add('hidden');
     });
 
-    // --- 3. Handle Health Form Submit ---
+    // --- Tab Switching ---
+    const tabs = document.querySelectorAll('.modal-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            const targetPanel = document.getElementById(`tab-${tab.dataset.tab}`);
+            if (targetPanel) targetPanel.classList.add('active');
+        });
+    });
+
+    // --- Mood Selector ---
+    let selectedMood = '';
+    const moodOptions = document.querySelectorAll('.mood-option');
+    moodOptions.forEach(opt => {
+        opt.addEventListener('click', () => {
+            moodOptions.forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            selectedMood = opt.dataset.mood;
+        });
+    });
+
+    // --- Energy Level Selector ---
+    let selectedEnergy = 0;
+    const energyBars = document.querySelectorAll('.energy-bar');
+    energyBars.forEach(bar => {
+        bar.addEventListener('click', () => {
+            const level = parseInt(bar.dataset.level);
+            selectedEnergy = level;
+            energyBars.forEach(b => {
+                if (parseInt(b.dataset.level) <= level) {
+                    b.classList.add('active');
+                } else {
+                    b.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    // --- Quick Log Submit ---
     if (healthForm) {
         healthForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const submitBtn = document.getElementById('submit-health-btn');
+            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Syncing...';
             
             const logData = {
                 user_email: userEmail,
                 log_date: new Date().toISOString().split('T')[0], 
-                calories: parseInt(document.getElementById('input-cal').value),
-                water_liters: parseFloat(document.getElementById('input-water').value),
-                sleep_hours: parseFloat(document.getElementById('input-sleep').value),
-                steps: parseInt(document.getElementById('input-steps').value)
+                calories: parseInt(document.getElementById('input-cal').value) || 0,
+                water_liters: parseFloat(document.getElementById('input-water').value) || 0,
+                sleep_hours: parseFloat(document.getElementById('input-sleep').value) || 0,
+                steps: parseInt(document.getElementById('input-steps').value) || 0
             };
 
             try {
@@ -251,10 +294,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (response.ok) {
+                    submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Synced!';
+                    submitBtn.classList.add('success');
+                    
                     await loadDashboardData(); 
 
-                    dataModal.classList.add('hidden');
-                    healthForm.reset();
+                    setTimeout(() => {
+                        dataModal.classList.add('hidden');
+                        healthForm.reset();
+                        submitBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Sync & Analyze';
+                        submitBtn.classList.remove('success');
+                    }, 1200);
 
                     const chatBody = document.querySelector('.ria-chat-body');
                     if (chatBody && result.ai_insight) {
@@ -264,11 +314,68 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 console.error("Error logging health data:", error);
+                submitBtn.innerHTML = '<i class="fa-solid fa-exclamation-triangle"></i> Error';
+                setTimeout(() => {
+                    submitBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Sync & Analyze';
+                }, 2000);
             }
         });
     }
 
-    // --- 4. RIA AI Chat Modal ---
+    // --- Detailed Log Submit ---
+    if (detailedForm) {
+        detailedForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submit-detailed-btn');
+            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...';
+
+            const logData = {
+                user_email: userEmail,
+                log_date: new Date().toISOString().split('T')[0],
+                mood: selectedMood || 'okay',
+                energy_level: selectedEnergy || 3,
+                weight_kg: parseFloat(document.getElementById('input-weight').value) || 0,
+                heart_rate: parseInt(document.getElementById('input-heart-rate').value) || 0,
+                notes: document.getElementById('input-notes').value || ''
+            };
+
+            try {
+                const response = await fetch('/api/log-health-detailed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(logData)
+                });
+
+                if (response.ok) {
+                    submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Saved!';
+                    submitBtn.classList.add('success');
+
+                    await loadDashboardData();
+
+                    setTimeout(() => {
+                        dataModal.classList.add('hidden');
+                        detailedForm.reset();
+                        moodOptions.forEach(o => o.classList.remove('selected'));
+                        energyBars.forEach(b => b.classList.remove('active'));
+                        selectedMood = '';
+                        selectedEnergy = 0;
+                        submitBtn.innerHTML = '<i class="fa-solid fa-database"></i> Save Detailed Log';
+                        submitBtn.classList.remove('success');
+                    }, 1200);
+                }
+            } catch (error) {
+                console.error("Error saving detailed log:", error);
+                submitBtn.innerHTML = '<i class="fa-solid fa-exclamation-triangle"></i> Error';
+                setTimeout(() => {
+                    submitBtn.innerHTML = '<i class="fa-solid fa-database"></i> Save Detailed Log';
+                }, 2000);
+            }
+        });
+    }
+
+    // ==========================================
+    // RIA AI CHAT
+    // ==========================================
     const riaBotBtn = document.getElementById('ria-bot-btn');
     const riaChatModal = document.getElementById('ria-chat-modal');
     const closeRiaModalBtn = document.getElementById('close-ria-modal');
@@ -280,9 +387,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (riaChatModal && e.target === riaChatModal) riaChatModal.classList.add('hidden');
     });
 
-    // ==========================================
-    // 5. RIA AI Chat Logic
-    // ==========================================
     const chatInput = document.querySelector('.chat-input');
     const sendBtn = document.querySelector('.send-btn');
     const chatBody = document.querySelector('.ria-chat-body');
@@ -299,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bubbleDiv.classList.add('msg-bubble');
         
         if (isUser) {
-            bubbleDiv.style.background = 'linear-gradient(135deg, var(--accent-cyan), #0088ff)';
+            bubbleDiv.style.background = `linear-gradient(135deg, var(--accent-color), var(--accent-purple))`;
             bubbleDiv.style.color = '#fff';
             bubbleDiv.style.borderTopRightRadius = '4px';
         }

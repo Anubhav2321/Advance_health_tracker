@@ -43,11 +43,14 @@ class WorkoutReset(BaseModel):
 # DEFAULT CYBER ROUTINE (Matrix Fallback)
 # ==========================================
 DEFAULT_ROUTINE = [
-    {"name": "Cyber Pushups", "muscle": "Chest & Triceps", "sets": 3, "reps": 15},
-    {"name": "Neon Squats", "muscle": "Quads & Glutes", "sets": 4, "reps": 12},
-    {"name": "Matrix Pull-ups", "muscle": "Back & Biceps", "sets": 3, "reps": 10},
-    {"name": "Holo Core Crunches", "muscle": "Abs", "sets": 3, "reps": 20},
-    {"name": "Neural Deadlifts", "muscle": "Back & Hamstrings", "sets": 3, "reps": 8}
+    {"name": "Bench Press", "muscle": "Chest & Triceps", "sets": 4, "reps": 10},
+    {"name": "Barbell Squats", "muscle": "Quads & Glutes", "sets": 4, "reps": 12},
+    {"name": "Deadlifts", "muscle": "Back & Hamstrings", "sets": 3, "reps": 8},
+    {"name": "Pull-ups", "muscle": "Back & Biceps", "sets": 3, "reps": 10},
+    {"name": "Overhead Press", "muscle": "Shoulders & Triceps", "sets": 3, "reps": 10},
+    {"name": "Plank Hold", "muscle": "Core & Abs", "sets": 3, "reps": 45},
+    {"name": "Lunges", "muscle": "Legs & Glutes", "sets": 3, "reps": 12},
+    {"name": "Bicep Curls", "muscle": "Biceps & Arms", "sets": 3, "reps": 12}
 ]
 
 # ==========================================

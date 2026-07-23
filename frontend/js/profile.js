@@ -52,22 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 4. FETCH DATA & DISPLAY GOOGLE/LOCAL IMAGE
     // ==========================================
 
-    // Apply saved theme
-    (function applyStoredTheme() {
-        const root = document.documentElement;
-        const savedMode = localStorage.getItem('bionexus_theme_mode') || 'dark';
-        const savedAccent = localStorage.getItem('bionexus_theme_accent') || 'cyan';
-        const accentMap = { cyan: '#00f3ff', purple: '#9d4edd', green: '#00ff87', orange: '#ff9d00' };
-        if (accentMap[savedAccent]) {
-            root.style.setProperty('--accent-cyan', savedAccent === 'cyan' ? '#00f3ff' : accentMap[savedAccent]);
-        }
-        if (savedMode === 'light') {
-            root.style.setProperty('--bg-dark', '#f0f2f5');
-            root.style.setProperty('--surface-dark', '#ffffff');
-            root.style.setProperty('--text-primary', '#181b21');
-            root.style.setProperty('--text-secondary', '#5a5f6b');
-        }
-    })();
+    // Theme is applied by theme-loader.js (loaded in HTML <head>)
 
     try {
         const response = await fetch(`/api/profile/${userEmail}`);

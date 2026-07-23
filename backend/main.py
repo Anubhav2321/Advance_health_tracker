@@ -21,7 +21,7 @@ import bcrypt
 # --- Import Internal Modules ---
 from backend.database import Database
 from backend.models import (
-    DailyHealthLog, UserOnboarding, UserProfile, 
+    DailyHealthLog, DetailedHealthLog, UserOnboarding, UserProfile, 
     UserRegister, UserLogin, TokenResponse
 )
 from backend.ai_engine import get_health_insight
@@ -417,6 +417,40 @@ async def log_health_data(log: DailyHealthLog):
     except Exception as e:
         logger.error(f"Database error saving health log: {e}")
         raise HTTPException(status_code=500, detail="Failed to synchronize health data.")
+
+@app.post("/api/log-health-detailed", tags=["Health Tracking"])
+async def log_detailed_health_data(log: DetailedHealthLog):
+    """Logs detailed health data (mood, energy, weight, heart rate, notes)."""
+    try:
+        db = Database.db
+        log_dict = log.model_dump()
+        
+        # Merge detailed data into the health log document for this day
+        await db.health_logs.update_one(
+            {"user_email": log.user_email, "log_date": log.log_date},
+            {"$set": {
+                "mood": log_dict.get("mood", "okay"),
+                "energy_level": log_dict.get("energy_level", 3),
+                "weight_kg": log_dict.get("weight_kg", 0),
+                "heart_rate": log_dict.get("heart_rate", 0),
+                "notes": log_dict.get("notes", ""),
+                "user_email": log.user_email,
+                "log_date": log.log_date
+            }},
+            upsert=True
+        )
+        
+        # If weight is provided, update user profile weight too
+        if log_dict.get("weight_kg", 0) > 0:
+            await db.users.update_one(
+                {"email": log.user_email},
+                {"$set": {"current_weight_kg": log_dict["weight_kg"]}}
+            )
+        
+        return {"status": "success", "message": "Detailed health data logged successfully."}
+    except Exception as e:
+        logger.error(f"Error saving detailed health log: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save detailed health data.")
 
 @app.post("/api/chat", tags=["AI Assistant"])
 async def ria_chat_engine(chat: ChatMessage):

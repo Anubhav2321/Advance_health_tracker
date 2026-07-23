@@ -3,152 +3,452 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BioNexus | Cyber Workout</title>
+    <title>BioNexus | Workout</title>
+    <meta name="description" content="BioNexus Workout Tracker - Track exercises, sets, and reps with AI">
+    
+    <!-- Theme Loader (MUST be first) -->
+    <script src="js/theme-loader.js"></script>
+    
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link rel="stylesheet" href="css/dashboard.css">
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        
-        :root {
-            --bg-dark: #0f1115;
-            --surface-dark: #181b21;
-            --accent-cyan: #00f3ff;
-            --accent-purple: #9d4edd;
-            --accent-green: #00ff87;
-            --text-primary: #f8f9fa;
-            --text-secondary: #a0a6b1;
-        }
-
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
             display: flex;
             justify-content: center;
             min-height: 100vh;
-            padding-bottom: 80px; 
+            padding-bottom: 80px;
         }
 
         .app-container {
             width: 100%;
             max-width: 480px;
             padding: 20px;
-            background: radial-gradient(circle at top, rgba(0, 243, 255, 0.05), transparent 60%), var(--bg-dark);
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 18px;
         }
 
-        /* Top Navigation */
-        .top-nav {
+        /* --- Stats Ribbon --- */
+        .stats-ribbon {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 0 20px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            gap: 8px;
         }
-        .top-nav h2 { font-size: 1.3rem; font-weight: 600; color: var(--accent-cyan); letter-spacing: 1px; }
 
-        /* Hologram Progress Ring */
-        .progress-section {
-            display: flex; justify-content: center; align-items: center;
-            flex-direction: column; padding: 20px 0; position: relative;
+        .stat-chip {
+            flex: 1;
+            background: var(--surface-dark);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-sm);
+            padding: 12px 10px;
+            text-align: center;
+            box-shadow: var(--shadow-card);
         }
-        .progress-ring { width: 150px; height: 150px; position: relative; }
-        .progress-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-        .progress-ring circle { fill: none; stroke-width: 10; stroke-linecap: round; }
-        .progress-ring .bg-circle { stroke: rgba(255,255,255,0.05); }
-        .progress-ring .fill-circle {
-            stroke: var(--accent-cyan);
-            stroke-dasharray: 408; 
+
+        .stat-chip .stat-val {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            line-height: 1.2;
+        }
+
+        .stat-chip .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- Progress Ring --- */
+        .progress-section {
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+
+        .progress-ring-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+        }
+
+        .progress-ring-wrapper svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-wrapper .ring-bg {
+            fill: none;
+            stroke: var(--surface-light);
+            stroke-width: 8;
+        }
+
+        [data-theme="light"] .progress-ring-wrapper .ring-bg {
+            stroke: #e8ecf0;
+        }
+
+        .progress-ring-wrapper .ring-fill {
+            fill: none;
+            stroke: url(#workout-gradient);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 408;
             stroke-dashoffset: 408;
             transition: stroke-dashoffset 0.8s ease-out;
-            filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.5));
         }
-        .progress-text {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); text-align: center;
-        }
-        .progress-text h3 { font-size: 1.8rem; color: var(--text-primary); }
-        .progress-text p { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Accordion List */
-        .workout-list { display: flex; flex-direction: column; gap: 15px; }
-        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .progress-text h3 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .progress-text p {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* --- Filter Tabs --- */
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .filter-tabs::-webkit-scrollbar { display: none; }
+
+        .filter-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            background: var(--surface-dark);
+            color: var(--text-secondary);
+            transition: all 0.3s ease !important;
+        }
+
+        .filter-tab.active {
+            background: var(--accent-color);
+            color: #000;
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
+        }
+
+        /* --- Action Buttons Row --- */
+        .action-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            background: var(--surface-dark);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.3s ease !important;
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .action-btn i {
+            font-size: 0.85rem;
+        }
+
+        /* --- Rest Timer --- */
+        .rest-timer {
+            display: none;
+            background: var(--surface-dark);
+            border: 1px solid rgba(var(--accent-rgb), 0.2);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            text-align: center;
+            box-shadow: var(--shadow-card);
+        }
+
+        .rest-timer.active {
+            display: block;
+        }
+
+        .timer-display {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--accent-color);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .timer-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease !important;
+        }
+
+        .timer-btn.primary {
+            background: var(--accent-color);
+            color: #000;
+        }
+
+        .timer-btn.secondary {
+            background: var(--input-bg);
+            color: var(--text-secondary);
+            border: 1px solid var(--input-border);
+        }
+
+        /* --- Exercise Card --- */
+        .workout-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
         .exercise-card {
             background: var(--surface-dark);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            overflow: hidden; transition: all 0.3s ease;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            transition: all 0.3s ease !important;
+            box-shadow: var(--shadow-card);
         }
+
         .exercise-card.completed {
             border-color: var(--accent-green);
-            box-shadow: 0 0 15px rgba(0, 255, 135, 0.1);
+        }
+
+        [data-theme="dark"] .exercise-card.completed {
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.1);
         }
 
         .ex-header {
-            padding: 18px; display: flex; justify-content: space-between;
-            align-items: center; cursor: pointer; background: rgba(255,255,255,0.02);
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
         }
-        .ex-info h4 { font-size: 1.1rem; color: var(--text-primary); margin-bottom: 5px; }
-        .ex-info p { font-size: 0.85rem; color: var(--accent-purple); }
-        .ex-toggle { color: var(--accent-cyan); transition: 0.3s; }
-        .exercise-card.active .ex-toggle { transform: rotate(180deg); }
+
+        .ex-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .ex-info h4 {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .ex-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+        }
+
+        .muscle-badge {
+            background: rgba(var(--accent-rgb), 0.1);
+            color: var(--accent-color);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+
+        .difficulty-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .difficulty-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--input-border);
+        }
+
+        .difficulty-dots span.filled {
+            background: var(--accent-color);
+        }
+
+        .ex-toggle {
+            color: var(--text-secondary);
+            transition: transform 0.3s ease !important;
+            font-size: 0.9rem;
+        }
+
+        .exercise-card.active .ex-toggle {
+            transform: rotate(180deg);
+            color: var(--accent-color);
+        }
 
         /* Accordion Body */
         .ex-body {
-            max-height: 0; overflow: hidden;
-            transition: max-height 0.4s ease; background: rgba(0,0,0,0.2);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            background: rgba(0,0,0,0.08);
         }
-        .exercise-card.active .ex-body { max-height: 300px; }
+
+        [data-theme="light"] .ex-body {
+            background: rgba(0,0,0,0.02);
+        }
+
+        .exercise-card.active .ex-body {
+            max-height: 400px;
+        }
 
         .set-row {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.02);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--glass-border);
         }
-        .set-row:last-child { border-bottom: none; }
-        .set-number { color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; width: 50px; }
-        
-        .set-inputs { display: flex; gap: 10px; align-items: center; }
+
+        .set-row:last-child {
+            border-bottom: none;
+        }
+
+        .set-number {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            width: 44px;
+        }
+
+        .set-inputs {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
         .set-inputs input {
-            width: 60px; background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1); color: var(--accent-cyan);
-            padding: 8px; border-radius: 8px; text-align: center; outline: none;
+            width: 58px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--accent-color);
+            padding: 8px 6px;
+            border-radius: 8px;
+            text-align: center;
+            outline: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            transition: border-color 0.3s ease !important;
         }
-        .set-inputs input:focus { border-color: var(--accent-cyan); }
-        
-        /* Cyber Checkbox */
+
+        .set-inputs input:focus {
+            border-color: var(--accent-color);
+        }
+
         .cyber-check {
-            width: 28px; height: 28px; border-radius: 8px;
-            border: 2px solid var(--text-secondary);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.3s; color: transparent;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: 2px solid var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease !important;
+            color: transparent;
+            font-size: 0.75rem;
         }
+
         .cyber-check.checked {
-            background: var(--accent-green); border-color: var(--accent-green);
-            color: var(--bg-dark); box-shadow: 0 0 15px rgba(0, 255, 135, 0.4);
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            color: #fff;
         }
 
-        /* Final Trigger Button */
+        [data-theme="dark"] .cyber-check.checked {
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+        }
+
+        /* --- Complete Button --- */
         .complete-btn {
-            width: 100%; padding: 18px; margin-top: 10px; margin-bottom: 30px;
-            background: rgba(0, 243, 255, 0.1); color: var(--accent-cyan);
-            border: 1px solid var(--accent-cyan); border-radius: 12px;
-            font-size: 1.1rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 2px; cursor: pointer; transition: 0.3s;
-            display: flex; justify-content: center; gap: 10px;
-            opacity: 0.5; pointer-events: none;
-        }
-        .complete-btn.ready {
-            opacity: 1; pointer-events: auto; background: var(--accent-cyan);
-            color: var(--bg-dark); box-shadow: 0 0 25px rgba(0, 243, 255, 0.5);
+            width: 100%;
+            padding: 16px;
+            margin-top: 8px;
+            margin-bottom: 30px;
+            background: rgba(var(--accent-rgb), 0.08);
+            color: var(--accent-color);
+            border: 1px solid rgba(var(--accent-rgb), 0.2);
+            border-radius: var(--border-radius-sm);
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s ease !important;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            opacity: 0.5;
+            pointer-events: none;
         }
 
-        .loader { text-align: center; padding: 50px; color: var(--accent-cyan); font-size: 1.2rem; }
+        .complete-btn.ready {
+            opacity: 1;
+            pointer-events: auto;
+            background: var(--accent-color);
+            color: #000;
+            border-color: var(--accent-color);
+            box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.35);
+        }
+
+        .complete-btn.ready:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(var(--accent-rgb), 0.45);
+        }
     </style>
 </head>
 <body>
@@ -156,21 +456,45 @@
     <div class="app-container">
         
         <div class="top-nav">
-            <h2><i class="fa-solid fa-dumbbell"></i> Cyber Matrix Workout</h2>
-            <div id="date-display" style="color: var(--text-secondary); font-size: 0.9rem;"></div>
+            <a href="/dashboard" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+            <h2><i class="fa-solid fa-dumbbell"></i> Workout</h2>
+            <div id="date-display" style="color: var(--text-secondary); font-size: 0.82rem; font-weight: 500;"></div>
         </div>
 
         <div id="loading-spinner" class="loader">
-            <i class="fa-solid fa-circle-notch fa-spin"></i> Loading Matrix...
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Loading workout...
         </div>
 
-        <div id="workout-content" style="display: none; flex-direction: column; gap: 20px;">
+        <div id="workout-content" style="display: none; flex-direction: column; gap: 18px;">
             
+            <!-- Stats Ribbon -->
+            <div class="stats-ribbon">
+                <div class="stat-chip">
+                    <div class="stat-val" id="stat-exercises">0</div>
+                    <div class="stat-label">Exercises</div>
+                </div>
+                <div class="stat-chip">
+                    <div class="stat-val" id="stat-volume">0<small style="font-size: 0.7rem; color: var(--text-secondary);">kg</small></div>
+                    <div class="stat-label">Volume</div>
+                </div>
+                <div class="stat-chip">
+                    <div class="stat-val" id="stat-calories">0</div>
+                    <div class="stat-label">Est. Cal</div>
+                </div>
+            </div>
+
+            <!-- Progress Ring -->
             <div class="progress-section">
-                <div class="progress-ring">
-                    <svg>
-                        <circle class="bg-circle" cx="75" cy="75" r="65"></circle>
-                        <circle class="fill-circle" id="progress-circle" cx="75" cy="75" r="65"></circle>
+                <div class="progress-ring-wrapper">
+                    <svg viewBox="0 0 150 150">
+                        <defs>
+                            <linearGradient id="workout-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color: var(--accent-color);" />
+                                <stop offset="100%" style="stop-color: var(--accent-green);" />
+                            </linearGradient>
+                        </defs>
+                        <circle class="ring-bg" cx="75" cy="75" r="65"></circle>
+                        <circle class="ring-fill" id="progress-circle" cx="75" cy="75" r="65"></circle>
                     </svg>
                     <div class="progress-text">
                         <h3 id="progress-text">0%</h3>
@@ -179,27 +503,59 @@
                 </div>
             </div>
 
-            <div class="workout-list" id="workout-list">
-                </div>
+            <!-- Filter Tabs -->
+            <div class="filter-tabs" id="filter-tabs">
+                <button class="filter-tab active" data-filter="all">All</button>
+                <button class="filter-tab" data-filter="chest">Chest</button>
+                <button class="filter-tab" data-filter="back">Back</button>
+                <button class="filter-tab" data-filter="legs">Legs</button>
+                <button class="filter-tab" data-filter="arms">Arms</button>
+                <button class="filter-tab" data-filter="abs">Abs</button>
+            </div>
 
+            <!-- Action Buttons -->
+            <div class="action-row">
+                <button class="action-btn" id="ai-generate-btn">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> AI Generate
+                </button>
+                <button class="action-btn" id="rest-timer-btn">
+                    <i class="fa-solid fa-stopwatch"></i> Rest Timer
+                </button>
+                <button class="action-btn" id="reset-workout-btn">
+                    <i class="fa-solid fa-rotate-right"></i> Reset
+                </button>
+            </div>
+
+            <!-- Rest Timer Widget -->
+            <div class="rest-timer" id="rest-timer">
+                <div class="timer-label">Rest Between Sets</div>
+                <div class="timer-display" id="timer-display">1:30</div>
+                <div class="timer-controls">
+                    <button class="timer-btn secondary" onclick="adjustTimer(-15)">-15s</button>
+                    <button class="timer-btn primary" id="timer-start-btn">Start</button>
+                    <button class="timer-btn secondary" onclick="adjustTimer(15)">+15s</button>
+                </div>
+            </div>
+
+            <!-- Exercise List -->
+            <div class="workout-list" id="workout-list"></div>
+
+            <!-- Complete Button -->
             <button class="complete-btn" id="complete-btn">
-                <i class="fa-solid fa-bolt"></i> Sync Data
+                <i class="fa-solid fa-lock"></i> Complete Workout
             </button>
         </div>
 
     </div>
 
+    <!-- Bottom Nav -->
     <nav class="bottom-nav">
         <a href="/dashboard" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
-        
         <a href="/workout" class="nav-item active"><i class="fa-solid fa-dumbbell"></i><span>Workout</span></a>
-        
         <div class="nav-center-dock">
             <button id="add-data-btn" class="nav-fab-btn" onclick="window.location.href='/dashboard'"><i class="fa-solid fa-plus"></i></button>
         </div>
-        
         <a href="/stats" class="nav-item"><i class="fa-solid fa-chart-line"></i><span>Stats</span></a>
-        
         <a href="/diet" class="nav-item"><i class="fa-solid fa-utensils"></i><span>Diet</span></a>
     </nav>
 

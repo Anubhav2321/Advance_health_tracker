@@ -3,31 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BioNexus | Matrix Stats</title>
+    <title>BioNexus | Stats</title>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/theme-loader.js"></script>
+    
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         
-        :root {
-            --bg-dark: #0f1115;
-            --surface-dark: #181b21;
-            --accent-cyan: #00f3ff;
-            --accent-purple: #9d4edd;
-            --accent-green: #00ff87;
-            --text-primary: #f8f9fa;
-            --text-secondary: #a0a6b1;
-        }
+        /* Variables inherited from global style.css + theme-loader.js */
 
         body {
-            background-color: var(--bg-dark); color: var(--text-primary);
-            display: flex; justify-content: center; min-height: 100vh; padding-bottom: 80px; 
+            background: var(--bg-dark); color: var(--text-primary);
+            display: flex; justify-content: center; min-height: 100vh; padding-bottom: 80px;
         }
 
         .app-container {
@@ -50,7 +42,7 @@
         .sum-card h3 { font-size: 1.5rem; color: var(--text-primary); margin-bottom: 5px; }
         .sum-card p { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
         .sum-card.glow-green { border-bottom: 2px solid var(--accent-green); }
-        .sum-card.glow-cyan { border-bottom: 2px solid var(--accent-cyan); }
+        .sum-card.glow-cyan { border-bottom: 2px solid var(--accent-color); }
 
         .chart-container {
             background: var(--surface-dark); padding: 20px; border-radius: 16px;
@@ -96,7 +88,7 @@
             </div>
 
             <div class="chart-container">
-                <div class="chart-title"><i class="fa-solid fa-utensils" style="color: var(--accent-cyan);"></i> Calorie Intake History</div>
+                <div class="chart-title"><i class="fa-solid fa-utensils" style="color: var(--accent-color);"></i> Calorie Intake History</div>
                 <canvas id="calorieChart" height="200"></canvas>
             </div>
 

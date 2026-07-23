@@ -256,75 +256,55 @@ async def analyze_food_photo(req: FoodAnalysisRequest):
     detailed nutritional analysis with health rating.
     """
     try:
-        client = get_sync_groq_client()
-        if not client:
+        groq_api_key = os.environ.get("GROQ_API_KEY", "")
+        if not groq_api_key or groq_api_key == "YOUR_GROQ_API_KEY_HERE":
             return {"status": "error", "message": "API key required for Food Analysis."}
 
         # Prepare the image for the vision model
-        # Clean the base64 string (remove data URL prefix if present)
         image_data = req.image_base64
         if "," in image_data:
             image_data = image_data.split(",")[1]
 
-        analysis_prompt = """
-You are an expert AI nutritionist and food analyst. Analyze this food image carefully.
+        system_prompt = """You are BioNexus Nutrition AI — an expert food analyst specializing in Indian, Asian, and global cuisines.
 
-You MUST respond ONLY with a valid JSON object (no markdown, no extra text, no code fences). Use this exact format:
+CRITICAL RULES:
+1. You MUST output ONLY a raw JSON object. No markdown. No code fences. No explanation text. No thinking.
+2. Identify the food using its authentic cultural name (e.g., "Chicken Biryani", "Paneer Tikka Masala", "Aloo Paratha", "Dal Makhani", "Chole Bhature", "Pav Bhaji").
+3. For Indian foods, use the Hindi/regional name that Indians commonly use (e.g., "Rajma Chawal" not "Kidney Bean Curry with Rice").
+4. The description must explain what the dish IS — its ingredients, cooking style, and origin. NOT what you see in the image.
+5. Points should include: nutritional benefits, who should eat it, best time to eat, cultural significance, and a healthy tip.
 
-{
-  "food_name": "Name of the food/dish",
-  "description": "Brief 1-2 sentence description of the food",
-  "calories": 350,
-  "protein": 15.5,
-  "carbs": 45.0,
-  "fat": 12.0,
-  "fiber": 3.5,
-  "sugar": 8.0,
-  "health_rating": 7,
-  "serving_size": "1 plate (approx 300g)",
-  "points": [
-    "Point 1 about the food",
-    "Point 2 about nutritional value",
-    "Point 3 about health benefits or concerns",
-    "Point 4 about who should eat/avoid this",
-    "Point 5 about best time to consume"
-  ]
-}
+You know all Indian foods: Biryani, Pulao, Khichdi, Dal (all types), Roti, Naan, Paratha, Dosa, Idli, Sambar, Rasam, Paneer dishes, Sabzi varieties, Raita, Papad, Pickle, Mithai, Halwa, Gulab Jamun, Jalebi, Ladoo, Vada, Bhaji, Pakora, Chaat, Pani Puri, Samosa, Kachori, Dhokla, Upma, Poha, etc."""
 
-Rules:
-- Calories in kcal (integer)
-- Protein, carbs, fat, fiber, sugar in grams (float)
-- health_rating: 1-10 (10 = very healthy, 1 = very unhealthy)
-- serving_size: typical single serving
-- points: exactly 5 descriptive points about the food
-- Be accurate with nutritional estimates based on typical serving sizes
-- If you cannot identify the food, set food_name to "Unknown Food" and estimate generically
-"""
+        user_prompt = """Analyze this food image. Output ONLY this JSON structure (no other text):
 
-        # List of vision models to try (in priority order)
+{"food_name":"Exact dish name","description":"2-3 sentence description of what this dish is, its key ingredients and how it is traditionally prepared","calories":350,"protein":15.5,"carbs":45.0,"fat":12.0,"fiber":3.5,"sugar":8.0,"health_rating":7,"serving_size":"1 plate (approx 300g)","points":["Nutritional benefit of this food","Who should eat this and who should avoid","Best time of day to consume this","Cultural or regional significance","One healthy tip or alternative"]}"""
+
+        # Vision models (July 2026 Groq)
         VISION_MODELS = [
-            "meta-llama/llama-4-scout-17b-16e-instruct",
-            "llama-3.2-90b-vision-preview",
-            "llama-3.2-11b-vision-preview",
+            "qwen/qwen3.6-27b",
         ]
         
         raw_response = None
         vision_success = False
+        last_error = ""
         
         for model_id in VISION_MODELS:
             try:
+                client = Groq(api_key=groq_api_key)
                 completion = client.chat.completions.create(
                     messages=[
+                        {"role": "system", "content": system_prompt},
                         {
                             "role": "user",
                             "content": [
-                                {"type": "text", "text": analysis_prompt},
+                                {"type": "text", "text": user_prompt},
                                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}}
                             ]
                         }
                     ],
                     model=model_id,
-                    temperature=0.3,
+                    temperature=0.2,
                     max_tokens=800
                 )
                 raw_response = completion.choices[0].message.content.strip()
@@ -332,18 +312,44 @@ Rules:
                 logger.info(f"Vision analysis succeeded with model: {model_id}")
                 break
             except Exception as model_err:
+                last_error = str(model_err)
                 logger.warning(f"Vision model {model_id} failed: {model_err}")
                 continue
         
-        # Fallback: If ALL vision models fail, use text-based LLM to estimate
+        # Fallback: If ALL vision models fail, try to analyze via text description
         if not vision_success:
-            logger.warning("All vision models failed. Using text-based fallback.")
+            logger.warning(f"All vision models failed. Last error: {last_error}")
             try:
-                fallback_prompt = """You are a nutrition expert. A user uploaded a food photo but the vision model is unavailable.
-Based on a typical mixed meal, provide a reasonable nutritional estimate.
-Respond ONLY with valid JSON (no markdown, no extra text):
-{"food_name":"Estimated Meal","description":"Vision unavailable - generic estimate for a typical meal","calories":400,"protein":15.0,"carbs":50.0,"fat":15.0,"fiber":4.0,"sugar":8.0,"health_rating":5,"serving_size":"1 plate (approx 300g)","points":["Vision model unavailable - values are estimates","Log manually for accurate tracking","Try again later for AI-powered analysis","Estimates based on average meal composition","Consider using the search feature for precise data"]}"""
-                fallback_completion = client.chat.completions.create(
+                # Try to get the AI to at least provide reasonable food analysis
+                fallback_client = Groq(api_key=groq_api_key)
+                
+                fallback_prompt = """You are an expert nutritionist. The user uploaded a food photo but the vision AI couldn't process it.
+
+Based on common meals people photograph and log, provide a helpful nutritional analysis.
+Since you cannot see the image, be honest about it and provide a reasonable mid-range estimate.
+
+Respond ONLY with valid JSON (no markdown, no code fences):
+{
+  "food_name": "Unidentified Meal",
+  "description": "Could not analyze the image. Showing a general estimate for a typical home-cooked meal. Please search for your specific food in the search bar for accurate data.",
+  "calories": 400,
+  "protein": 18.0,
+  "carbs": 45.0,
+  "fat": 14.0,
+  "fiber": 4.0,
+  "sugar": 6.0,
+  "health_rating": 5,
+  "serving_size": "1 plate (approx 300g)",
+  "points": [
+    "⚠️ Image analysis was unavailable — these are estimated values",
+    "For accurate tracking, use the food search feature above",
+    "Type the name of your food in the search bar for precise macros",
+    "Common meals range from 300-600 kcal per serving",
+    "Try taking a clearer, well-lit photo and retry the scanner"
+  ]
+}"""
+                
+                fallback_completion = fallback_client.chat.completions.create(
                     messages=[{"role": "user", "content": fallback_prompt}],
                     model="llama-3.3-70b-versatile",
                     temperature=0.3,
@@ -352,33 +358,105 @@ Respond ONLY with valid JSON (no markdown, no extra text):
                 raw_response = fallback_completion.choices[0].message.content.strip()
             except Exception as fb_err:
                 logger.error(f"Fallback also failed: {fb_err}")
-                return {"status": "error", "message": "All AI models are currently unavailable. Please try again later."}
+                return {
+                    "status": "success",
+                    "data": {
+                        "food_name": "Analysis Unavailable",
+                        "description": "All AI models are currently busy. Please use the search bar to find your food manually.",
+                        "calories": 350, "protein": 15.0, "carbs": 40.0, "fat": 12.0,
+                        "fiber": 3.0, "sugar": 5.0, "health_rating": 5,
+                        "serving_size": "1 serving",
+                        "points": [
+                            "⚠️ AI models are currently at capacity",
+                            "Use the search bar above to find your specific food",
+                            "Type food name like 'chicken breast' or 'rice' for accurate data",
+                            "Try the photo scanner again in a few minutes",
+                            "You can also manually log your meal using the search feature"
+                        ]
+                    }
+                }
 
-        # Clean up response — remove markdown fences if present
-        if raw_response.startswith("```"):
-            raw_response = raw_response.split("\n", 1)[1] if "\n" in raw_response else raw_response[3:]
-            if raw_response.endswith("```"):
-                raw_response = raw_response[:-3]
-            raw_response = raw_response.strip()
+        # Clean up response — remove thinking tags and markdown fences
+        if raw_response:
+            import re
+            # Remove <think>...</think> tags if present (Qwen reasoning mode)
+            raw_response = re.sub(r'<think>[\s\S]*?</think>', '', raw_response).strip()
+            
+            # Remove ```json ... ``` wrapper
+            if "```" in raw_response:
+                json_match = re.search(r'```(?:json)?\s*([\s\S]*?)```', raw_response)
+                if json_match:
+                    raw_response = json_match.group(1).strip()
+                else:
+                    raw_response = raw_response.replace("```json", "").replace("```", "").strip()
+            
+            # Try to extract JSON if there's extra text around it
+            if not raw_response.startswith("{"):
+                start_idx = raw_response.find("{")
+                end_idx = raw_response.rfind("}") + 1
+                if start_idx != -1 and end_idx > start_idx:
+                    raw_response = raw_response[start_idx:end_idx]
         
         try:
             food_data = json.loads(raw_response)
             return {"status": "success", "data": food_data}
         except json.JSONDecodeError:
-            logger.warning(f"Model returned non-JSON: {raw_response[:200]}")
-            return {
-                "status": "success",
-                "data": {
-                    "food_name": "Analyzed Food",
-                    "description": raw_response[:200] if raw_response else "Analysis completed",
-                    "calories": 250, "protein": 10.0, "carbs": 30.0, "fat": 10.0,
-                    "fiber": 3.0, "sugar": 5.0, "health_rating": 5,
-                    "serving_size": "1 serving",
-                    "points": ["AI returned unstructured analysis", "Nutritional values are rough estimates",
-                               "Consider manual entry for accuracy", "Try with a clearer image",
-                               "Ensure the food is clearly visible in the photo"]
+            logger.warning(f"Model returned non-JSON. Attempting AI re-parse...")
+            logger.debug(f"Raw: {raw_response[:500]}")
+            
+            # Retry: Ask a text model to convert the messy response into clean JSON
+            try:
+                fix_client = Groq(api_key=groq_api_key)
+                fix_completion = fix_client.chat.completions.create(
+                    messages=[
+                        {"role": "system", "content": "You extract food data from text and return ONLY a JSON object. No other text."},
+                        {"role": "user", "content": f"""Extract the food information from this AI response and return ONLY valid JSON:
+
+{raw_response[:800]}
+
+Return this exact JSON format:
+{{"food_name":"Indian/cultural name of the food","description":"2-3 sentences about what this dish is and its ingredients","calories":350,"protein":15.0,"carbs":45.0,"fat":12.0,"fiber":3.0,"sugar":5.0,"health_rating":7,"serving_size":"1 plate","points":["Benefit 1","Benefit 2","Benefit 3","Benefit 4","Tip"]}}"""}
+                    ],
+                    model="llama-3.3-70b-versatile",
+                    temperature=0.1,
+                    max_tokens=600
+                )
+                fix_response = fix_completion.choices[0].message.content.strip()
+                
+                # Clean fix_response
+                fix_response = re.sub(r'<think>[\s\S]*?</think>', '', fix_response).strip()
+                if "```" in fix_response:
+                    match = re.search(r'```(?:json)?\s*([\s\S]*?)```', fix_response)
+                    if match:
+                        fix_response = match.group(1).strip()
+                if not fix_response.startswith("{"):
+                    si = fix_response.find("{")
+                    ei = fix_response.rfind("}") + 1
+                    if si != -1 and ei > si:
+                        fix_response = fix_response[si:ei]
+                
+                food_data = json.loads(fix_response)
+                logger.info("Successfully re-parsed food data via text model")
+                return {"status": "success", "data": food_data}
+            except Exception as reparse_err:
+                logger.warning(f"Re-parse also failed: {reparse_err}")
+                return {
+                    "status": "success",
+                    "data": {
+                        "food_name": "Unidentified Food",
+                        "description": "The AI could not return structured data. Please use the search bar above to find your specific food for accurate nutritional information.",
+                        "calories": 300, "protein": 12.0, "carbs": 35.0, "fat": 10.0,
+                        "fiber": 3.0, "sugar": 5.0, "health_rating": 5,
+                        "serving_size": "1 serving",
+                        "points": [
+                            "⚠️ AI returned unstructured analysis — values are estimated",
+                            "Use the search bar to find your exact food",
+                            "Type the dish name (e.g., 'biryani', 'dal') for precise macros",
+                            "Try capturing a clearer photo with good lighting",
+                            "Make sure only the food plate is visible in the image"
+                        ]
+                    }
                 }
-            }
             
     except Exception as e:
         logger.error(f"Food Analysis Error: {e}")

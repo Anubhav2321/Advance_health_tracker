@@ -8,8 +8,11 @@
     <meta name="description" content="BioNexus Cyber-Doc AI Core: Your premium AI doctor with voice assistant, multi-language support, and real clinical diagnosis.">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="js/theme-loader.js"></script>
+    
     <style>
-        /* ===== GLOBAL RESET & FOUNDATION ===== */
+        /* GLOBAL RESET & FOUNDATION */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
@@ -17,7 +20,7 @@
             color: #f8f9fa;
             font-family: 'Inter', sans-serif;
             
-            /* 🚨 FIX: Mobile Browser URL Bar Issue */
+            /*  FIX: Mobile Browser URL Bar Issue */
             height: 100dvh; 
             min-height: -webkit-fill-available; /* Fallback for iOS Safari */
             
@@ -51,7 +54,7 @@
             z-index: 0;
         }
 
-        /* ===== HEADER ===== */
+        /* HEADER */
         .chat-header {
             padding: 16px 20px;
             background: rgba(16, 18, 24, 0.85);
@@ -121,7 +124,7 @@
             color: #f8f9fa;
         }
 
-        /* ===== CHAT AREA ===== */
+        /* CHAT AREA */
         .chat-container {
             flex: 1;
             padding: 16px 16px 8px 16px;
@@ -137,7 +140,7 @@
         .chat-container::-webkit-scrollbar-track { background: transparent; }
         .chat-container::-webkit-scrollbar-thumb { background: rgba(0,243,255,0.2); border-radius: 10px; }
 
-        /* ===== MESSAGE BUBBLES ===== */
+        /* MESSAGE BUBBLES */
         .message {
             max-width: 85%;
             padding: 14px 16px;
@@ -193,7 +196,7 @@
             border-radius: 12px;
         }
 
-        /* ===== TYPING INDICATOR ===== */
+        /* TYPING INDICATOR */
         .typing-indicator {
             display: none;
             align-self: flex-start;
@@ -224,7 +227,7 @@
             30% { transform: translateY(-6px); opacity: 1; }
         }
 
-        /* ===== INPUT AREA ===== */
+        /* INPUT AREA */
         .input-area {
             padding: 14px 16px 20px 16px;
             background: rgba(16, 18, 24, 0.9);
@@ -299,7 +302,7 @@
             50% { box-shadow: 0 0 0 10px rgba(255,60,60,0); }
         }
 
-        /* ===== LOCKDOWN SCREEN ===== */
+        /* LOCKDOWN SCREEN */
         .lockdown-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -338,7 +341,7 @@
         }
         .lockdown-return-btn:hover { background: rgba(255,0,60,0.15); }
 
-        /* ===== VOICE STATUS OVERLAY ===== */
+        /* VOICE STATUS OVERLAY */
         .voice-status {
             display: none;
             position: fixed;

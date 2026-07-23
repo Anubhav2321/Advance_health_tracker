@@ -3,86 +3,311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BioNexus | Matrix Settings</title>
+    <title>BioNexus | Settings</title>
+    <meta name="description" content="BioNexus Settings - Customize your health tracker experience">
+    
+    <!-- Theme Loader (MUST be first) -->
+    <script src="js/theme-loader.js"></script>
+    
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        
-        :root {
-            --bg-dark: #0f1115;
-            --surface-dark: #181b21;
-            /* This is the master variable that will change dynamically */
-            --accent-master: #00f3ff; 
-            --text-primary: #f8f9fa;
-            --text-secondary: #a0a6b1;
-            --danger-red: #ff5e5e;
-        }
-
         body {
-            background-color: var(--bg-dark); color: var(--text-primary);
-            display: flex; justify-content: center; min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
         }
 
         .app-container {
-            width: 100%; max-width: 480px; padding: 20px;
-            background: radial-gradient(circle at top right, rgba(255,255,255,0.03), transparent 70%), var(--bg-dark); 
-            overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
-            -ms-overflow-style: none; scrollbar-width: none;
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
         .app-container::-webkit-scrollbar { display: none; }
 
-        .top-nav {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05); 
-            position: sticky; top: 0; background: rgba(15, 17, 21, 0.8); 
-            backdrop-filter: blur(10px); z-index: 10;
-        }
-        .back-btn { color: var(--text-primary); font-size: 1.2rem; cursor: pointer; text-decoration: none; padding: 5px 10px 5px 0; }
-        .top-nav h2 { font-size: 1.2rem; font-weight: 600; color: var(--accent-master); letter-spacing: 1px; flex: 1; text-align: center; margin-right: 25px; transition: color 0.3s; }
-
-        /* 💥 FIX: Premium Glassy Section */
+        /* Settings Section */
         .settings-section {
-            background: rgba(24, 27, 33, 0.4); 
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px;
+            background: var(--surface-dark);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-lg);
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: var(--shadow-card);
         }
-        .section-title { font-size: 1rem; color: var(--accent-master); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 5px; transition: color 0.3s; }
 
-        /* 💥 FIX: Input sizing & Glassy fields */
-        .input-group { display: flex; flex-direction: column; gap: 5px; width: 100%; }
-        .input-group label { font-size: 0.85rem; color: var(--text-secondary); }
-        .input-group input, .input-group select {
-            width: 100%; /* Forces it to stay inside container */
-            background: rgba(255, 255, 255, 0.05); 
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.15); color: var(--text-primary);
-            padding: 12px; border-radius: 8px; outline: none; font-size: 0.95rem;
-            transition: all 0.3s;
+        .section-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--glass-border);
         }
-        .input-group input:focus, .input-group select:focus { border-color: var(--accent-master); box-shadow: 0 0 10px rgba(0, 243, 255, 0.1); }
-        .input-group select option { background: var(--surface-dark); }
 
-        .row-2 { display: flex; gap: 15px; width: 100%; }
+        .section-title-row i {
+            font-size: 1.1rem;
+        }
 
-        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
-        .toggle-row label { font-size: 0.95rem; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: var(--text-secondary); transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: rgba(255,255,255,0.1); border: 1px solid var(--accent-master); }
-        input:checked + .slider:before { transform: translateX(24px); background-color: var(--accent-master); box-shadow: 0 0 10px var(--accent-master); }
+        /* Input Groups */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
 
-        .btn-primary { background: var(--accent-master); color: #000; border: none; padding: 15px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; width: 100%; }
-        .btn-outline { background: transparent; color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2); padding: 12px; border-radius: 12px; font-size: 0.9rem; cursor: pointer; transition: 0.3s; width: 100%; }
-        .btn-danger { background: rgba(255, 94, 94, 0.1); color: var(--danger-red); border: 1px solid var(--danger-red); padding: 15px; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; }
+        .input-group label {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
 
-        .loader { text-align: center; padding: 50px; color: var(--accent-master); }
-        #settings-content { display: none; flex-direction: column; gap: 20px; }
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--text-primary);
+            padding: 12px 14px;
+            border-radius: var(--border-radius-sm);
+            outline: none;
+            font-size: 0.92rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
+            -webkit-appearance: none;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+        }
+
+        .input-group select option {
+            background: var(--surface-dark);
+            color: var(--text-primary);
+        }
+
+        .row-2 {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+
+        /* ===== Theme Mode Selector ===== */
+        .theme-mode-selector {
+            display: flex;
+            gap: 8px;
+            background: var(--input-bg);
+            border-radius: var(--border-radius-sm);
+            padding: 4px;
+            border: 1px solid var(--input-border);
+        }
+
+        .theme-mode-option {
+            flex: 1;
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            transition: all 0.3s ease !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .theme-mode-option i {
+            font-size: 1rem;
+        }
+
+        .theme-mode-option.active {
+            background: var(--surface-dark);
+            color: var(--accent-color);
+            box-shadow: var(--shadow-card);
+        }
+
+        [data-theme="light"] .theme-mode-option.active {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        /* ===== Color Swatches ===== */
+        .color-swatches {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .color-swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease !important;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .color-swatch.active {
+            border-color: var(--text-primary);
+            transform: scale(1.1);
+        }
+
+        .color-swatch.active::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 0.8rem;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        .color-swatch[data-color="cyan"]   { background: #00f3ff; }
+        .color-swatch[data-color="purple"] { background: #a855f7; }
+        .color-swatch[data-color="green"]  { background: #22c55e; }
+        .color-swatch[data-color="orange"] { background: #f97316; }
+        .color-swatch[data-color="pink"]   { background: #ec4899; }
+        .color-swatch[data-color="blue"]   { background: #3b82f6; }
+
+        /* ===== Live Preview Card ===== */
+        .live-preview {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: var(--border-radius-sm);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .preview-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-color);
+        }
+
+        [data-theme="dark"] .preview-dot {
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .preview-text {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .preview-text strong {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        /* ===== Buttons ===== */
+        .btn-primary {
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 15px;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease !important;
+            margin-top: 6px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--input-border);
+            padding: 13px;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease !important;
+            width: 100%;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.08);
+            color: var(--danger-red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 15px;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease !important;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger-red);
+        }
+
+        #settings-content {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            padding-bottom: 30px;
+        }
+
+        /* Divider */
+        .settings-divider {
+            border: 0;
+            border-top: 1px solid var(--glass-border);
+            margin: 4px 0;
+        }
+
+        /* Password section */
+        .pass-input {
+            margin-top: 6px;
+        }
+
+        #pass-msg {
+            font-size: 0.8rem;
+            margin-top: 6px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -91,23 +316,26 @@
         
         <div class="top-nav">
             <a href="javascript:history.back()" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
-            <h2><i class="fa-solid fa-gear"></i> Settings Matrix</h2>
+            <h2><i class="fa-solid fa-gear"></i> Settings</h2>
         </div>
 
         <div id="loading-spinner" class="loader">
-            <i class="fa-solid fa-circle-notch fa-spin"></i> Accessing Systems...
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
         </div>
 
         <div id="settings-content">
             
+            <!-- Bio-Metrics Section -->
             <div class="settings-section">
-                <h3 class="section-title"><i class="fa-solid fa-user-astronaut"></i> Bio-Metrics</h3>
+                <div class="section-title-row">
+                    <i class="fa-solid fa-user-astronaut"></i> Bio-Metrics
+                </div>
                 
                 <div class="input-group">
                     <label>Fitness Goal</label>
                     <select id="set-goal">
                         <option value="weight_loss">Weight Loss</option>
-                        <option value="maintenance">Maintenance (Default)</option>
+                        <option value="maintenance">Maintenance</option>
                         <option value="muscle_gain">Muscle Gain</option>
                     </select>
                 </div>
@@ -148,30 +376,54 @@
                 </div>
             </div>
 
+            <!-- Interface & AI Section -->
             <div class="settings-section">
-                <h3 class="section-title"><i class="fa-solid fa-palette"></i> Interface & AI</h3>
+                <div class="section-title-row">
+                    <i class="fa-solid fa-palette"></i> Interface & AI
+                </div>
                 
-                <div class="row-2">
-                    <div class="input-group">
-                        <label>UI Theme</label>
-                        <select id="set-theme-mode">
-                            <option value="dark">Cyber Dark</option>
-                            <option value="light">Clean Light</option>
-                            <option value="system">System Default</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Accent Color</label>
-                        <select id="set-theme-color">
-                            <option value="cyan">Neon Cyan</option>
-                            <option value="purple">Synthwave Purple</option>
-                            <option value="green">Matrix Green</option>
-                            <option value="orange">Sunset Orange</option>
-                        </select>
+                <!-- Theme Mode -->
+                <div class="input-group">
+                    <label>UI Theme</label>
+                    <div class="theme-mode-selector" id="theme-mode-selector">
+                        <button class="theme-mode-option" data-mode="dark">
+                            <i class="fa-solid fa-moon"></i>
+                            Dark
+                        </button>
+                        <button class="theme-mode-option" data-mode="light">
+                            <i class="fa-solid fa-sun"></i>
+                            Light
+                        </button>
+                        <button class="theme-mode-option" data-mode="system">
+                            <i class="fa-solid fa-laptop"></i>
+                            System
+                        </button>
                     </div>
                 </div>
 
-                <div class="row-2" style="margin-top: 10px;">
+                <!-- Accent Color Swatches -->
+                <div class="input-group">
+                    <label>Accent Color</label>
+                    <div class="color-swatches" id="color-swatches">
+                        <div class="color-swatch" data-color="cyan" title="Neon Cyan"></div>
+                        <div class="color-swatch" data-color="purple" title="Synthwave Purple"></div>
+                        <div class="color-swatch" data-color="green" title="Matrix Green"></div>
+                        <div class="color-swatch" data-color="orange" title="Sunset Orange"></div>
+                        <div class="color-swatch" data-color="pink" title="Hot Pink"></div>
+                        <div class="color-swatch" data-color="blue" title="Electric Blue"></div>
+                    </div>
+                </div>
+
+                <!-- Live Preview -->
+                <div class="live-preview">
+                    <div class="preview-dot"></div>
+                    <div class="preview-text">
+                        Theme: <strong id="preview-theme-text">Cyber Dark</strong> · <strong id="preview-accent-text">Neon Cyan</strong>
+                    </div>
+                </div>
+
+                <!-- RIA Settings -->
+                <div class="row-2" style="margin-top: 4px;">
                     <div class="input-group">
                         <label>RIA's Tone</label>
                         <select id="set-ria-tone">
@@ -181,7 +433,7 @@
                         </select>
                     </div>
                     <div class="input-group">
-                        <label>RIA's Lang</label>
+                        <label>RIA's Language</label>
                         <select id="set-ria-lang">
                             <option value="english">English</option>
                             <option value="banglish">Banglish</option>
@@ -190,25 +442,33 @@
                 </div>
             </div>
 
-            <button class="btn-primary" id="save-settings-btn"><i class="fa-solid fa-microchip"></i> Update Matrix Configurations</button>
+            <!-- Save Button -->
+            <button class="btn-primary" id="save-settings-btn">
+                <i class="fa-solid fa-microchip"></i> Save Settings
+            </button>
 
-            <div class="settings-section" style="margin-top: 10px;">
-                <h3 class="section-title" style="color: var(--text-secondary); border-color: rgba(255,255,255,0.05);"><i class="fa-solid fa-shield-halved"></i> Security & Data</h3>
-                
-                <div class="input-group" style="margin-top: 10px;">
-                    <input type="password" id="old-pass" placeholder="Current Password">
-                    <input type="password" id="new-pass" placeholder="New Password" style="margin-top: 5px;">
-                    <button class="btn-outline" id="change-pass-btn" style="margin-top: 10px;">Update Password</button>
-                    <div id="pass-msg" style="font-size: 0.8rem; margin-top: 5px;"></div>
+            <!-- Security Section -->
+            <div class="settings-section">
+                <div class="section-title-row" style="color: var(--text-secondary);">
+                    <i class="fa-solid fa-shield-halved"></i> Security & Data
                 </div>
                 
-                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.05); margin: 15px 0;">
+                <div class="input-group">
+                    <input type="password" id="old-pass" placeholder="Current Password" class="pass-input">
+                    <input type="password" id="new-pass" placeholder="New Password" class="pass-input" style="margin-top: 6px;">
+                    <button class="btn-outline" id="change-pass-btn" style="margin-top: 10px;">
+                        <i class="fa-solid fa-key"></i> Update Password
+                    </button>
+                    <div id="pass-msg"></div>
+                </div>
+                
+                <hr class="settings-divider">
 
-                <button class="btn-outline" id="export-data-btn" style="color: var(--accent-master); border-color: var(--accent-master);">
+                <button class="btn-outline" id="export-data-btn" style="color: var(--accent-color); border-color: rgba(var(--accent-rgb), 0.3);">
                     <i class="fa-solid fa-file-pdf"></i> Export Data as PDF
                 </button>
 
-                <button class="btn-danger" id="delete-account-btn" style="margin-top: 10px;">
+                <button class="btn-danger" id="delete-account-btn">
                     <i class="fa-solid fa-skull"></i> Erase Account Permanently
                 </button>
             </div>
