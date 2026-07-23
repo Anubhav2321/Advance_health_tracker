@@ -226,6 +226,7 @@ BioNexus/
 │   ├── js/
 │   │   ├── api.js
 │   │   ├── auth.js
+|   |   ├── cyber-doc.js
 │   │   ├── dashboard.js
 │   │   ├── diet.js
 │   │   ├── onboarding.js
@@ -235,6 +236,7 @@ BioNexus/
 │   │   └── workout.js
 │   │
 │   ├── diet.html
+|   ├── cyber-dco.html 
 │   ├── index.html
 │   ├── intro.html
 │   ├── login.html
