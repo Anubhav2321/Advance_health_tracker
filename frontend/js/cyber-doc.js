@@ -1,7 +1,8 @@
 /**
  * BioNexus Cyber-Doc AI Core — Premium Medical Assistant
  * Features: Voice Input (Web Speech API + Whisper fallback), 
- *           Text-to-Speech, Multi-Language Support, Enhanced Rendering
+ *           Text-to-Speech, Multi-Language Support, Enhanced Rendering,
+ *           Chat History with Session Management
  */
 
 // ==========================================
@@ -50,16 +51,18 @@ const LANGUAGE_CONFIG = {
     hindi:    { bcp47: "hi-IN", ttsLang: "hi-IN", name: "हिन्दी" },
     bengali:  { bcp47: "bn-IN", ttsLang: "bn-IN", name: "বাংলা" },
     bhojpuri: { bcp47: "hi-IN", ttsLang: "hi-IN", name: "भोजपुरी" },  // Bhojpuri uses Hindi recognition
-    gujarati: { bcp47: "gu-IN", ttsLang: "gu-IN", name: "ગુજરાતી" }
+    gujarati: { bcp47: "gu-IN", ttsLang: "gu-IN", name: "ગુજરાতી" }
 };
 
 let currentLanguage = "english";
+let currentSessionId = null;
 
 // ==========================================
 // DOM ELEMENTS
 // ==========================================
 let chatBox, userInput, typingIndicator, typingLabel, lockdownScreen, lockdownText;
 let voiceBtn, voiceStatus, voiceStatusText, languageSelector;
+let historyBtn, historySidebar, historyOverlay, historyList, historyCloseBtn, newChatBtn;
 
 document.addEventListener('DOMContentLoaded', () => {
     chatBox = document.getElementById("chat-box");
@@ -73,6 +76,14 @@ document.addEventListener('DOMContentLoaded', () => {
     voiceStatusText = document.getElementById("voice-status-text");
     languageSelector = document.getElementById("language-selector");
 
+    // History elements
+    historyBtn = document.getElementById("history-btn");
+    historySidebar = document.getElementById("history-sidebar");
+    historyOverlay = document.getElementById("history-overlay");
+    historyList = document.getElementById("history-list");
+    historyCloseBtn = document.getElementById("history-close-btn");
+    newChatBtn = document.getElementById("new-chat-btn");
+
     // Language selector event
     languageSelector.addEventListener('change', (e) => {
         currentLanguage = e.target.value;
@@ -83,9 +94,249 @@ document.addEventListener('DOMContentLoaded', () => {
     // Voice button event
     voiceBtn.addEventListener('click', toggleVoiceRecording);
 
+    // History sidebar events
+    historyBtn.addEventListener('click', openHistorySidebar);
+    historyCloseBtn.addEventListener('click', closeHistorySidebar);
+    historyOverlay.addEventListener('click', closeHistorySidebar);
+
+    // New chat button
+    newChatBtn.addEventListener('click', startNewChat);
+
     // Focus input
     userInput.focus();
+
+    // Load history on page load
+    loadChatHistory();
 });
+
+// ==========================================
+// CHAT HISTORY SIDEBAR
+// ==========================================
+function openHistorySidebar() {
+    historySidebar.classList.add('active');
+    historyOverlay.classList.add('active');
+    loadChatHistory();
+}
+
+function closeHistorySidebar() {
+    historySidebar.classList.remove('active');
+    historyOverlay.classList.remove('active');
+}
+
+async function loadChatHistory() {
+    if (!userEmail) return;
+    
+    try {
+        const res = await fetch(`/api/ai/history/${userEmail}`);
+        const data = await res.json();
+        
+        if (data.status === 'success' && data.sessions && data.sessions.length > 0) {
+            historyList.innerHTML = '';
+            
+            data.sessions.forEach(session => {
+                const timeStr = formatRelativeTime(session.updated_at || session.created_at);
+                const phaseLabel = getPhaseLabel(session.phase);
+                const isActive = session.session_id === currentSessionId;
+                
+                const item = document.createElement('div');
+                item.className = `history-item ${isActive ? 'active' : ''}`;
+                item.innerHTML = `
+                    <div class="history-item-title">${escapeHtml(session.title || 'Untitled')}</div>
+                    <div class="history-item-meta">
+                        <span class="history-item-time">${timeStr}</span>
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <span class="history-item-phase ${session.phase || 'initial'}">${phaseLabel}</span>
+                            <button class="history-item-delete" data-id="${session.session_id}" title="Delete">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Click to load session
+                item.addEventListener('click', (e) => {
+                    if (e.target.closest('.history-item-delete')) return;
+                    loadSession(session.session_id);
+                    closeHistorySidebar();
+                });
+                
+                // Delete button
+                const deleteBtn = item.querySelector('.history-item-delete');
+                deleteBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (confirm('Delete this conversation?')) {
+                        await deleteSession(session.session_id);
+                        loadChatHistory();
+                    }
+                });
+                
+                historyList.appendChild(item);
+            });
+        } else {
+            historyList.innerHTML = `
+                <div class="history-empty">
+                    <i class="fa-solid fa-comments"></i>
+                    No conversations yet.<br>Start a consultation to see history here.
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error("Failed to load chat history:", err);
+        historyList.innerHTML = `
+            <div class="history-empty">
+                <i class="fa-solid fa-wifi"></i>
+                Failed to load history.
+            </div>
+        `;
+    }
+}
+
+async function loadSession(sessionId) {
+    try {
+        const res = await fetch(`/api/ai/session/${sessionId}`);
+        const data = await res.json();
+        
+        if (data.status === 'success' && data.session) {
+            currentSessionId = sessionId;
+            
+            // Clear chat and render session messages
+            chatBox.innerHTML = '';
+            
+            const messages = data.session.messages || [];
+            messages.forEach(msg => {
+                if (msg.role === 'user') {
+                    appendMessage(msg.content, 'user-msg');
+                } else {
+                    appendBotMessage(msg.content);
+                }
+            });
+            
+            // Re-add typing indicator
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'typing';
+            typingDiv.innerHTML = `
+                <div class="typing-dots"><span></span><span></span><span></span></div>
+                <div class="typing-label" id="typing-label">Analyzing symptoms...</div>
+            `;
+            chatBox.appendChild(typingDiv);
+            typingIndicator = typingDiv;
+            typingLabel = typingDiv.querySelector('#typing-label');
+            
+            if (messages.length === 0) {
+                showWelcomeMessage();
+            }
+            
+            showSystemNote(`Loaded conversation: "${data.session.title}"`);
+        }
+    } catch (err) {
+        console.error("Failed to load session:", err);
+        showSystemNote("Failed to load conversation.");
+    }
+}
+
+async function deleteSession(sessionId) {
+    try {
+        await fetch(`/api/ai/session/${sessionId}`, { method: 'DELETE' });
+        if (sessionId === currentSessionId) {
+            currentSessionId = null;
+            startFreshChat();
+        }
+    } catch (err) {
+        console.error("Failed to delete session:", err);
+    }
+}
+
+async function startNewChat() {
+    try {
+        const res = await fetch('/api/ai/new-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: userEmail })
+        });
+        const data = await res.json();
+        
+        if (data.status === 'success') {
+            currentSessionId = data.session_id;
+            startFreshChat();
+            showSystemNote("New consultation started. Describe your symptoms.");
+        }
+    } catch (err) {
+        console.error("Failed to start new chat:", err);
+        showSystemNote("Failed to start new session.");
+    }
+}
+
+function startFreshChat() {
+    chatBox.innerHTML = '';
+    showWelcomeMessage();
+    
+    // Re-add typing indicator
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'typing-indicator';
+    typingDiv.id = 'typing';
+    typingDiv.innerHTML = `
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+        <div class="typing-label" id="typing-label">Analyzing symptoms...</div>
+    `;
+    chatBox.appendChild(typingDiv);
+    typingIndicator = typingDiv;
+    typingLabel = typingDiv.querySelector('#typing-label');
+}
+
+function showWelcomeMessage() {
+    const welcomeDiv = document.createElement('div');
+    welcomeDiv.className = 'message bot-msg';
+    welcomeDiv.innerHTML = `
+        <div class="welcome-msg">
+            <span class="doc-icon"><i class="fa-solid fa-staff-snake"></i></span>
+            <h3>BioNexus Medical AI Core</h3>
+            <p>I am your premium AI diagnostic assistant. Describe your symptoms in detail and I will guide you through a thorough clinical analysis.</p>
+            <div class="welcome-badges">
+                <span><i class="fa-solid fa-stethoscope"></i> Diagnostics</span>
+                <span><i class="fa-solid fa-prescription"></i> Prescriptions</span>
+                <span><i class="fa-solid fa-microphone"></i> Voice Input</span>
+                <span><i class="fa-solid fa-language"></i> Multi-Language</span>
+            </div>
+        </div>
+    `;
+    chatBox.appendChild(welcomeDiv);
+}
+
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+function formatRelativeTime(isoString) {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function getPhaseLabel(phase) {
+    const labels = {
+        'initial': 'New',
+        'follow_up': 'In Progress',
+        'diagnosis': 'Diagnosis',
+        'prescribed': 'Complete'
+    };
+    return labels[phase] || 'New';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 // ==========================================
 // TEXT MESSAGING
@@ -110,12 +361,18 @@ async function sendMessage(overrideText = null) {
             body: JSON.stringify({ 
                 email: userEmail, 
                 message: text,
-                language: currentLanguage 
+                language: currentLanguage,
+                session_id: currentSessionId
             })
         });
 
         const data = await response.json();
         hideTyping();
+
+        // Update session ID from response
+        if (data.session_id) {
+            currentSessionId = data.session_id;
+        }
 
         if (data.status === "blocked") {
             lockdownText.innerText = data.message;
@@ -310,12 +567,18 @@ function startMediaRecorderFallback() {
                         body: JSON.stringify({
                             email: userEmail,
                             audio_base64: base64Audio.split(',')[1],
-                            language: currentLanguage
+                            language: currentLanguage,
+                            session_id: currentSessionId
                         })
                     });
 
                     const data = await response.json();
                     hideTyping();
+
+                    // Update session ID
+                    if (data.session_id) {
+                        currentSessionId = data.session_id;
+                    }
 
                     if (data.transcription) {
                         showSystemNote(`🎤 Voice: "${data.transcription}"`);

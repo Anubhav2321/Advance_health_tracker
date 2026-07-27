@@ -164,6 +164,63 @@ document.addEventListener('DOMContentLoaded', async () => {
                 options: commonOptions
             });
 
+            // 6. Carbs Chart — NEW (from diet_logs)
+            const carbsCtx = document.getElementById('carbsChart').getContext('2d');
+            new Chart(carbsCtx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Carbs (g)',
+                        data: charts.carbs || [],
+                        borderColor: '#fb923c',
+                        backgroundColor: createGradient(carbsCtx, 251, 146, 60),
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fb923c',
+                        borderWidth: 2
+                    }]
+                },
+                options: commonOptions
+            });
+
+            // 7. Protein Chart — NEW (from diet_logs)
+            const proteinCtx = document.getElementById('proteinChart').getContext('2d');
+            new Chart(proteinCtx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Protein (g)',
+                        data: charts.protein || [],
+                        backgroundColor: 'rgba(244, 114, 182, 0.5)',
+                        borderColor: '#f472b6',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: commonOptions
+            });
+
+            // 8. Fats Chart — NEW (from diet_logs)
+            const fatsCtx = document.getElementById('fatsChart').getContext('2d');
+            new Chart(fatsCtx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Fats (g)',
+                        data: charts.fats || [],
+                        backgroundColor: 'rgba(251, 191, 36, 0.5)',
+                        borderColor: '#fbbf24',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: commonOptions
+            });
+
             // Show content
             document.getElementById('loading-spinner').style.display = 'none';
             document.getElementById('stats-content').style.display = 'flex';

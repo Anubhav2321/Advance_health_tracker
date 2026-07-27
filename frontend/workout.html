@@ -452,6 +452,156 @@
             transform: translateY(-2px);
             box-shadow: 0 12px 30px rgba(var(--accent-rgb), 0.45);
         }
+
+        /* --- AI Generate Modal --- */
+        .ai-muscle-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .ai-muscle-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .ai-modal-content {
+            background: var(--surface-dark, #131620);
+            border: 1px solid rgba(0, 243, 255, 0.15);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: modalSlideUp 0.3s ease-out;
+        }
+        @keyframes modalSlideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .ai-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .ai-modal-header h3 {
+            font-size: 1rem;
+            color: var(--accent-color, #00f3ff);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ai-modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary, #a0a6b1);
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        .ai-modal-close:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        .ai-modal-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .ai-label {
+            font-size: 0.78rem;
+            color: var(--text-secondary, #a0a6b1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .ai-select {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            cursor: pointer;
+            transition: 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .ai-select:focus {
+            border-color: var(--accent-color, #00f3ff);
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.15);
+        }
+        .ai-select option {
+            background: #131620;
+            color: #fff;
+        }
+        .ai-goal-badge {
+            margin-top: 16px;
+            padding: 10px 14px;
+            background: rgba(0, 243, 255, 0.06);
+            border: 1px solid rgba(0, 243, 255, 0.12);
+            border-radius: 10px;
+            font-size: 0.82rem;
+            color: var(--accent-color, #00f3ff);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ai-goal-badge strong {
+            text-transform: capitalize;
+        }
+        .ai-generate-confirm-btn {
+            margin-top: 18px;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent-color, #00f3ff), var(--accent-purple, #9d4edd));
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+        }
+        .ai-generate-confirm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 243, 255, 0.3);
+        }
+        .ai-generate-confirm-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .ai-generate-status {
+            margin-top: 12px;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.82rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
     </style>
 </head>
 <body>

@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let completedSets = 0;
     let workoutData = [];
     let currentFilter = 'all';
+    let userGoal = 'maintenance';
 
     // Muscle group categorization
     const muscleCategories = {
@@ -64,6 +65,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (name.includes('press') || name.includes('row') || name.includes('lunge')) return 2;
         return 1;
     }
+
+    // Fetch user profile for goal
+    async function fetchUserGoal() {
+        try {
+            const res = await fetch(`/api/profile/${userEmail}`);
+            const data = await res.json();
+            if (data.status === 'success' && data.data) {
+                userGoal = data.data.goal || 'maintenance';
+            }
+        } catch (e) {
+            console.error('Failed to fetch user goal:', e);
+        }
+    }
+
+    await fetchUserGoal();
 
     // ==========================================
     // 2. FETCH WORKOUT PLAN
@@ -377,35 +393,124 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ==========================================
-    // 7. AI GENERATE ROUTINE
+    // 7. AI GENERATE ROUTINE (OVERHAULED)
     // ==========================================
-    document.getElementById('ai-generate-btn').addEventListener('click', async () => {
-        const btn = document.getElementById('ai-generate-btn');
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generating...';
-        
-        try {
-            const res = await fetch('/api/workout/generate-ai', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_email: userEmail,
-                    target_muscle: 'full body',
-                    fitness_level: 'intermediate'
-                })
-            });
-            
-            const data = await res.json();
-            
-            if (data.status === 'success' && data.ai_routine) {
-                alert('AI Routine Generated!\n\n' + data.ai_routine);
-            } else {
-                alert(data.message || 'AI is currently offline. Using default routine.');
-            }
-        } catch (error) {
-            alert('Failed to connect to AI engine.');
+    const aiGenerateBtn = document.getElementById('ai-generate-btn');
+    
+    aiGenerateBtn.addEventListener('click', async () => {
+        // Show muscle group selector modal
+        const existingModal = document.getElementById('ai-muscle-modal');
+        if (existingModal) {
+            existingModal.classList.toggle('active');
+            return;
         }
-        
-        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI Generate';
+
+        // Create AI Generate Modal
+        const modal = document.createElement('div');
+        modal.id = 'ai-muscle-modal';
+        modal.className = 'ai-muscle-modal active';
+        modal.innerHTML = `
+            <div class="ai-modal-content">
+                <div class="ai-modal-header">
+                    <h3><i class="fa-solid fa-wand-magic-sparkles"></i> AI Workout Generator</h3>
+                    <button class="ai-modal-close" id="close-ai-modal">&times;</button>
+                </div>
+                <div class="ai-modal-body">
+                    <label class="ai-label">Target Muscle Group</label>
+                    <select id="ai-muscle-select" class="ai-select">
+                        <option value="full body">🏋️ Full Body</option>
+                        <option value="chest">💪 Chest</option>
+                        <option value="back">🔙 Back</option>
+                        <option value="legs">🦵 Legs</option>
+                        <option value="shoulders">🫁 Shoulders</option>
+                        <option value="arms (biceps and triceps)">💪 Arms</option>
+                        <option value="core and abs">🧘 Core & Abs</option>
+                    </select>
+                    <label class="ai-label" style="margin-top:12px;">Fitness Level</label>
+                    <select id="ai-level-select" class="ai-select">
+                        <option value="beginner">🌱 Beginner</option>
+                        <option value="intermediate" selected>⚡ Intermediate</option>
+                        <option value="advanced">🔥 Advanced</option>
+                    </select>
+                    <div class="ai-goal-badge">
+                        <i class="fa-solid fa-bullseye"></i> Your Goal: <strong>${userGoal.replace('_', ' ')}</strong>
+                    </div>
+                    <button id="ai-generate-confirm" class="ai-generate-confirm-btn">
+                        <i class="fa-solid fa-bolt"></i> Generate AI Routine
+                    </button>
+                    <div id="ai-generate-status" class="ai-generate-status" style="display:none;"></div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Close button
+        document.getElementById('close-ai-modal').addEventListener('click', () => {
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+        });
+
+        // Generate button
+        document.getElementById('ai-generate-confirm').addEventListener('click', async () => {
+            const muscleSelect = document.getElementById('ai-muscle-select');
+            const levelSelect = document.getElementById('ai-level-select');
+            const statusEl = document.getElementById('ai-generate-status');
+            const confirmBtn = document.getElementById('ai-generate-confirm');
+            
+            const targetMuscle = muscleSelect.value;
+            const fitnessLevel = levelSelect.value;
+
+            confirmBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generating...';
+            confirmBtn.disabled = true;
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = '<i class="fa-solid fa-brain"></i> AI is designing your personalized routine...';
+            statusEl.style.color = 'var(--accent-color)';
+
+            try {
+                const res = await fetch('/api/workout/generate-ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_email: userEmail,
+                        target_muscle: targetMuscle,
+                        fitness_level: fitnessLevel,
+                        fitness_goal: userGoal
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.status === 'success' && data.exercises && data.exercises.length > 0) {
+                    // Load AI exercises directly into the workout UI
+                    workoutData = data.exercises;
+                    
+                    statusEl.innerHTML = `<i class="fa-solid fa-check-circle" style="color:var(--accent-green);"></i> ${data.message}`;
+                    statusEl.style.color = 'var(--accent-green)';
+
+                    // Re-render the workout list with new exercises
+                    setTimeout(() => {
+                        renderWorkoutList(workoutData);
+                        updateProgress();
+                        updateStats();
+                        
+                        // Close modal
+                        modal.classList.remove('active');
+                        setTimeout(() => modal.remove(), 300);
+                    }, 1200);
+                } else {
+                    statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#ff6b6b;"></i> ${data.message || 'AI could not generate routine. Using default.'}`;
+                    statusEl.style.color = '#ff6b6b';
+                    confirmBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Try Again';
+                    confirmBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('AI Generate Error:', error);
+                statusEl.innerHTML = '<i class="fa-solid fa-wifi" style="color:#ff6b6b;"></i> Connection failed. Check your network.';
+                statusEl.style.color = '#ff6b6b';
+                confirmBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Try Again';
+                confirmBtn.disabled = false;
+            }
+        });
     });
 
     // ==========================================

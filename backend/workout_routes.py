@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 import logging
 import os
+import json
 from datetime import datetime
 from groq import AsyncGroq
 from backend.database import Database
@@ -35,14 +36,41 @@ class AIWorkoutRequest(BaseModel):
     user_email: str
     target_muscle: str
     fitness_level: Optional[str] = "intermediate"
+    fitness_goal: Optional[str] = "maintenance"
 
 class WorkoutReset(BaseModel):
     user_email: str
 
 # ==========================================
-# DEFAULT CYBER ROUTINE (Matrix Fallback)
+# GOAL-SPECIFIC DEFAULT ROUTINES
 # ==========================================
-DEFAULT_ROUTINE = [
+
+# Weight Loss — High reps, circuit-style, cardio-heavy
+ROUTINE_WEIGHT_LOSS = [
+    {"name": "Burpees", "muscle": "Full Body", "sets": 4, "reps": 15},
+    {"name": "Jump Squats", "muscle": "Quads & Glutes", "sets": 4, "reps": 15},
+    {"name": "Mountain Climbers", "muscle": "Core & Cardio", "sets": 3, "reps": 20},
+    {"name": "Kettlebell Swings", "muscle": "Glutes & Hamstrings", "sets": 4, "reps": 15},
+    {"name": "Box Step-Ups", "muscle": "Legs & Glutes", "sets": 3, "reps": 12},
+    {"name": "Battle Ropes", "muscle": "Arms & Cardio", "sets": 3, "reps": 30},
+    {"name": "Plank Hold", "muscle": "Core & Abs", "sets": 3, "reps": 45},
+    {"name": "Jumping Lunges", "muscle": "Legs & Glutes", "sets": 3, "reps": 12}
+]
+
+# Muscle Gain — Heavy compound lifts, progressive overload
+ROUTINE_MUSCLE_GAIN = [
+    {"name": "Barbell Bench Press", "muscle": "Chest & Triceps", "sets": 5, "reps": 5},
+    {"name": "Barbell Squats", "muscle": "Quads & Glutes", "sets": 5, "reps": 5},
+    {"name": "Deadlifts", "muscle": "Back & Hamstrings", "sets": 4, "reps": 5},
+    {"name": "Weighted Pull-ups", "muscle": "Back & Biceps", "sets": 4, "reps": 6},
+    {"name": "Overhead Press", "muscle": "Shoulders & Triceps", "sets": 4, "reps": 6},
+    {"name": "Barbell Rows", "muscle": "Back & Biceps", "sets": 4, "reps": 8},
+    {"name": "Incline Dumbbell Press", "muscle": "Upper Chest", "sets": 3, "reps": 8},
+    {"name": "Weighted Dips", "muscle": "Chest & Triceps", "sets": 3, "reps": 8}
+]
+
+# Maintenance — Balanced mix
+ROUTINE_MAINTENANCE = [
     {"name": "Bench Press", "muscle": "Chest & Triceps", "sets": 4, "reps": 10},
     {"name": "Barbell Squats", "muscle": "Quads & Glutes", "sets": 4, "reps": 12},
     {"name": "Deadlifts", "muscle": "Back & Hamstrings", "sets": 3, "reps": 8},
@@ -52,6 +80,12 @@ DEFAULT_ROUTINE = [
     {"name": "Lunges", "muscle": "Legs & Glutes", "sets": 3, "reps": 12},
     {"name": "Bicep Curls", "muscle": "Biceps & Arms", "sets": 3, "reps": 12}
 ]
+
+GOAL_ROUTINES = {
+    "weight_loss": ROUTINE_WEIGHT_LOSS,
+    "muscle_gain": ROUTINE_MUSCLE_GAIN,
+    "maintenance": ROUTINE_MAINTENANCE
+}
 
 # ==========================================
 # HELPER FOR GROQ AI (AI Workout Engine)
@@ -70,8 +104,8 @@ def get_groq_client():
 @router.get("/today/{user_email}")
 async def get_daily_workout(user_email: str):
     """
-    Fetches today's workout. If it's a new day, creates a fresh routine automatically.
-    Maintains all previous logic while enabling new auto-save arrays.
+    Fetches today's workout. If it's a new day, creates a fresh routine
+    based on the user's fitness goal (weight_loss, muscle_gain, maintenance).
     """
     try:
         db = Database.db
@@ -81,9 +115,16 @@ async def get_daily_workout(user_email: str):
         workout = await db.workout_logs.find_one({"user_email": user_email, "date": today})
         
         if not workout:
-            # Create a fresh Matrix Routine for today with empty progress
+            # Fetch user profile to get their fitness goal
+            user = await db.users.find_one({"email": user_email})
+            user_goal = user.get("goal", "maintenance") if user else "maintenance"
+            
+            # Select the appropriate routine based on goal
+            selected_routine = GOAL_ROUTINES.get(user_goal, ROUTINE_MAINTENANCE)
+            
+            # Create a fresh routine with empty progress
             initial_exercises = []
-            for ex in DEFAULT_ROUTINE:
+            for ex in selected_routine:
                 sets_arr = [{"kg": 0.0, "reps": ex["reps"], "completed": False} for _ in range(ex["sets"])]
                 initial_exercises.append({
                     "name": ex["name"],
@@ -98,6 +139,7 @@ async def get_daily_workout(user_email: str):
                 "date": today,
                 "exercises": initial_exercises,
                 "total_volume_kg": 0,
+                "fitness_goal": user_goal,
                 "created_at": datetime.utcnow().isoformat()
             }
             # Save the fresh routine to DB so Auto-Save has a target
@@ -164,35 +206,127 @@ async def get_workout_history(user_email: str, limit: int = 7):
 
 
 # ==========================================
-# 4. AI WORKOUT GENERATOR ROUTE
+# 4. AI WORKOUT GENERATOR ROUTE (OVERHAULED)
 # ==========================================
 @router.post("/generate-ai")
 async def generate_ai_routine(req: AIWorkoutRequest):
     """
-    Generates a smart AI routine if the user wants to train a specific muscle group.
-    Uses Llama-3 (Groq) for customized cyber-fitness generation.
+    Generates a smart AI routine based on user's target muscle group AND fitness goal.
+    Returns structured JSON exercises that can be directly loaded into the UI.
+    Uses low temperature for consistent results.
     """
     try:
         client = get_groq_client()
         if not client:
             return {"status": "error", "message": "AI API key missing. Using default Matrix routine."}
 
-        prompt = f"""
-        Act as an elite cyber-fitness AI. The user wants to train: {req.target_muscle}.
-        Their current fitness level is: {req.fitness_level}.
-        Suggest 4 highly effective exercises. Format strictly as a simple bulleted list with sets and reps.
-        Do not add any conversational text.
-        """
+        # Fetch user's actual goal from DB
+        db = Database.db
+        user = await db.users.find_one({"email": req.user_email})
+        user_goal = req.fitness_goal
+        if user:
+            user_goal = user.get("goal", req.fitness_goal)
+
+        # Goal-specific instructions for the AI
+        goal_instructions = {
+            "weight_loss": "Focus on HIGH REPS (15-20), circuit-style exercises, minimal rest, fat-burning compound movements. Include bodyweight and cardio-heavy exercises. Sets should be 3-4.",
+            "muscle_gain": "Focus on LOW REPS (5-8), heavy compound lifts for maximum hypertrophy and strength. Include barbell and dumbbell exercises. Sets should be 4-5.",
+            "maintenance": "Balance of moderate reps (10-12), mix of compound and isolation exercises. Sets should be 3-4."
+        }
         
+        goal_instruction = goal_instructions.get(user_goal, goal_instructions["maintenance"])
+
+        prompt = f"""You are a certified fitness trainer AI. Generate exactly 6 exercises for training: {req.target_muscle}.
+User's fitness level: {req.fitness_level}.
+User's fitness goal: {user_goal}.
+
+GOAL-SPECIFIC INSTRUCTIONS: {goal_instruction}
+
+CRITICAL: You MUST return ONLY a raw JSON array. No markdown, no explanation, no code fences.
+Each object must have exactly these keys: "name", "muscle", "sets", "reps"
+
+Example format:
+[{{"name":"Barbell Bench Press","muscle":"Chest & Triceps","sets":4,"reps":10}},{{"name":"Incline Dumbbell Press","muscle":"Upper Chest","sets":3,"reps":12}}]
+
+Return ONLY the JSON array, nothing else."""
+
         completion = await client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="llama-3.1-8b-instant", temperature=0.7, max_tokens=250
+            model="llama-3.3-70b-versatile",
+            temperature=0.2,
+            max_tokens=500
         )
         
-        return {"status": "success", "ai_routine": completion.choices[0].message.content}
+        raw_response = completion.choices[0].message.content.strip()
+        
+        # Clean up response — remove code fences and extra text
+        import re
+        raw_response = re.sub(r'<think>[\s\S]*?</think>', '', raw_response).strip()
+        if "```" in raw_response:
+            match = re.search(r'```(?:json)?\s*([\s\S]*?)```', raw_response)
+            if match:
+                raw_response = match.group(1).strip()
+        if not raw_response.startswith("["):
+            start = raw_response.find("[")
+            end = raw_response.rfind("]") + 1
+            if start != -1 and end > start:
+                raw_response = raw_response[start:end]
+        
+        try:
+            exercises = json.loads(raw_response)
+            
+            # Validate and normalize each exercise
+            validated_exercises = []
+            for ex in exercises:
+                validated_ex = {
+                    "name": str(ex.get("name", "Unknown Exercise")),
+                    "muscle": str(ex.get("muscle", req.target_muscle)),
+                    "sets": int(ex.get("sets", 3)),
+                    "reps": int(ex.get("reps", 10)),
+                    "set_details": []
+                }
+                # Build set_details array
+                for _ in range(validated_ex["sets"]):
+                    validated_ex["set_details"].append({
+                        "kg": 0.0,
+                        "reps": validated_ex["reps"],
+                        "completed": False
+                    })
+                validated_exercises.append(validated_ex)
+            
+            # Save AI-generated routine to DB for today
+            today = datetime.utcnow().strftime("%Y-%m-%d")
+            total_volume = 0
+            await db.workout_logs.update_one(
+                {"user_email": req.user_email, "date": today},
+                {"$set": {
+                    "exercises": validated_exercises,
+                    "total_volume_kg": total_volume,
+                    "ai_generated": True,
+                    "target_muscle": req.target_muscle,
+                    "last_synced": datetime.utcnow().isoformat()
+                }},
+                upsert=True
+            )
+            
+            return {
+                "status": "success",
+                "exercises": validated_exercises,
+                "goal": user_goal,
+                "message": f"AI generated {len(validated_exercises)} exercises for {req.target_muscle} ({user_goal})"
+            }
+            
+        except json.JSONDecodeError:
+            logger.warning(f"AI returned non-JSON workout. Raw: {raw_response[:300]}")
+            return {
+                "status": "error",
+                "message": "AI returned an invalid format. Using default routine.",
+                "exercises": []
+            }
+        
     except Exception as e:
         logger.error(f"AI Workout Error: {e}")
-        return {"status": "error", "message": "AI is offline. Please try again later."}
+        return {"status": "error", "message": "AI is offline. Please try again later.", "exercises": []}
 
 
 # ==========================================
