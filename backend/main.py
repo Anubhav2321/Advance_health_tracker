@@ -457,7 +457,7 @@ async def ria_chat_engine(chat: ChatMessage):
     try:
         groq_api_key = os.environ.get("GROQ_API_KEY", "YOUR_GROQ_API_KEY_HERE") 
         if groq_api_key == "YOUR_GROQ_API_KEY_HERE":
-            return {"status": "success", "reply": "My creator Anubhav hasn't inserted my API key yet! 🤖🔧"}
+            return {"status": "success", "reply": "My creator Anubhav hasn't inserted my API key yet!"}
 
         client = AsyncGroq(api_key=groq_api_key)
         ria_persona = """You are RIA (Responsive Intelligent Assistant), an advanced, cute, and friendly AI health coach built by Anubhav. 
@@ -472,7 +472,7 @@ async def ria_chat_engine(chat: ChatMessage):
         return {"status": "success", "reply": chat_completion.choices[0].message.content}
     except Exception as e:
         logger.error(f"RIA AI Engine Error: {e}")
-        raise HTTPException(status_code=500, detail="I am experiencing a temporary cognitive overload. Please try again! 🤯")
+        raise HTTPException(status_code=500, detail="I am experiencing a temporary cognitive overload. Please try again!")
 
 @app.post("/api/upload-image", tags=["User Profile"])
 async def upload_profile_image(data: ImageUpdate):

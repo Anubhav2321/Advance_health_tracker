@@ -145,8 +145,8 @@ async def ai_food_warning(req: AIWarningRequest):
 
         prompt = f"""
         The user's fitness goal is '{goal}'. They are about to eat '{req.food_name}'.
-        If this food is bad for their goal (e.g. Biryani for weight loss), write a short, friendly warning starting with '⚠️' and suggest a smart, healthy alternative.
-        If it is good for their goal, give a short encouraging response with '✅'.
+        If this food is bad for their goal (e.g. Biryani for weight loss), write a short, friendly warning starting with 'WARNING:' and suggest a smart, healthy alternative.
+        If it is good for their goal, give a short encouraging response with 'GOOD CHOICE:'.
         Keep it under 3 sentences. Be strict but polite.
         """
         
@@ -215,14 +215,14 @@ async def ria_diet_consult(req: RIADietChat):
         
         client = get_groq_client()
         if not client:
-            return {"status": "success", "reply": "RIA is offline. Core LLaMA API missing. 🧠💤"}
+            return {"status": "success", "reply": "RIA is offline. Core LLaMA API missing."}
 
         system_prompt = f"""
         You are RIA, an advanced AI health coach created by Anubhav. You are currently in the 'Diet Matrix' module.
         Context: The user has a target of {target_cal} kcal. They have consumed {consumed_cal} kcal today. Remaining: {remaining_cal} kcal.
         Rules:
         1. Answer their query keeping their remaining calories in mind.
-        2. STRICT RULE: You must ONLY talk about health, diet, fitness, and nutrition. If they ask about anything else (coding, weather, general chat), output a ⚠️ warning and gently refuse, guiding them back to health.
+        2. STRICT RULE: You must ONLY talk about health, diet, fitness, and nutrition. If they ask about anything else (coding, weather, general chat), output a warning and gently refuse, guiding them back to health.
         3. Keep it short, cute, and use emojis.
         """
         
@@ -240,7 +240,7 @@ async def ria_diet_consult(req: RIADietChat):
 
 
 # ==========================================
-# 🍽️ AI NUTRITION COACH — FOOD PHOTO ANALYSIS
+# AI NUTRITION COACH — FOOD PHOTO ANALYSIS
 # ==========================================
 def get_sync_groq_client():
     groq_api_key = os.environ.get("GROQ_API_KEY", "YOUR_GROQ_API_KEY_HERE")
@@ -341,7 +341,7 @@ Respond ONLY with valid JSON (no markdown, no code fences):
   "health_rating": 5,
   "serving_size": "1 plate (approx 300g)",
   "points": [
-    "⚠️ Image analysis was unavailable — these are estimated values",
+    "Image analysis was unavailable — these are estimated values",
     "For accurate tracking, use the food search feature above",
     "Type the name of your food in the search bar for precise macros",
     "Common meals range from 300-600 kcal per serving",
@@ -367,7 +367,7 @@ Respond ONLY with valid JSON (no markdown, no code fences):
                         "fiber": 3.0, "sugar": 5.0, "health_rating": 5,
                         "serving_size": "1 serving",
                         "points": [
-                            "⚠️ AI models are currently at capacity",
+                            "AI models are currently at capacity",
                             "Use the search bar above to find your specific food",
                             "Type food name like 'chicken breast' or 'rice' for accurate data",
                             "Try the photo scanner again in a few minutes",
@@ -449,7 +449,7 @@ Return this exact JSON format:
                         "fiber": 3.0, "sugar": 5.0, "health_rating": 5,
                         "serving_size": "1 serving",
                         "points": [
-                            "⚠️ AI returned unstructured analysis — values are estimated",
+                            "AI returned unstructured analysis — values are estimated",
                             "Use the search bar to find your exact food",
                             "Type the dish name (e.g., 'biryani', 'dal') for precise macros",
                             "Try capturing a clearer photo with good lighting",

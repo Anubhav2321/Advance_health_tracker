@@ -48,7 +48,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         'back': ['back', 'lat', 'trap', 'rhomboid'],
         'legs': ['quad', 'glute', 'hamstring', 'calf', 'leg'],
         'arms': ['bicep', 'tricep', 'arm', 'forearm', 'shoulder', 'delt'],
-        'abs': ['ab', 'core', 'oblique']
+        'abs': ['ab', 'core', 'oblique'],
+        'freehand': ['freehand', 'bodyweight', 'push-up', 'pushup', 'pull-up', 'pullup', 'burpee', 'plank'],
+        'cardio': ['cardio', 'running', 'cycling', 'jump rope', 'skipping', 'rowing', 'endurance'],
+        'fatburn': ['fat burn', 'hiit', 'mountain climber', 'jumping jack', 'high knee', 'jump squat', 'home']
     };
 
     function getExerciseCategory(muscle) {
@@ -97,11 +100,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                         { name: "Bench Press", muscle: "Chest & Triceps", sets: 4, reps: 10 },
                         { name: "Barbell Squats", muscle: "Quads & Glutes", sets: 4, reps: 12 },
                         { name: "Deadlifts", muscle: "Back & Hamstrings", sets: 3, reps: 8 },
-                        { name: "Pull-ups", muscle: "Back & Biceps", sets: 3, reps: 10 },
+                        { name: "Pull-ups", muscle: "Freehand & Bodyweight", sets: 3, reps: 10 },
                         { name: "Overhead Press", muscle: "Shoulders & Triceps", sets: 3, reps: 10 },
                         { name: "Plank Hold", muscle: "Core & Abs", sets: 3, reps: 45 },
                         { name: "Lunges", muscle: "Legs & Glutes", sets: 3, reps: 12 },
-                        { name: "Bicep Curls", muscle: "Biceps & Arms", sets: 3, reps: 12 }
+                        { name: "Bicep Curls", muscle: "Biceps & Arms", sets: 3, reps: 12 },
+                        { name: "Push-ups", muscle: "Freehand & Bodyweight", sets: 4, reps: 15 },
+                        { name: "Burpees", muscle: "Cardio & Endurance", sets: 3, reps: 12 },
+                        { name: "Mountain Climbers", muscle: "Fat Burn & HIIT", sets: 3, reps: 20 },
+                        { name: "Jumping Jacks", muscle: "Cardio & Endurance", sets: 3, reps: 30 },
+                        { name: "High Knees", muscle: "Fat Burn & HIIT", sets: 3, reps: 25 },
+                        { name: "Jump Squats", muscle: "Fat Burn & Home", sets: 3, reps: 15 }
                     ];
                     
                     workoutData.forEach(ex => {
@@ -418,19 +427,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="ai-modal-body">
                     <label class="ai-label">Target Muscle Group</label>
                     <select id="ai-muscle-select" class="ai-select">
-                        <option value="full body">🏋️ Full Body</option>
-                        <option value="chest">💪 Chest</option>
-                        <option value="back">🔙 Back</option>
-                        <option value="legs">🦵 Legs</option>
-                        <option value="shoulders">🫁 Shoulders</option>
-                        <option value="arms (biceps and triceps)">💪 Arms</option>
-                        <option value="core and abs">🧘 Core & Abs</option>
+                        <option value="full body">Full Body</option>
+                        <option value="chest">Chest</option>
+                        <option value="back">Back</option>
+                        <option value="legs">Legs</option>
+                        <option value="shoulders">Shoulders</option>
+                        <option value="arms (biceps and triceps)">Arms</option>
+                        <option value="core and abs">Core & Abs</option>
+                        <option value="freehand bodyweight">Freehand / Bodyweight</option>
+                        <option value="cardio and endurance">Cardio & Endurance</option>
+                        <option value="fat burn home workout">Fat Burn (Home)</option>
                     </select>
                     <label class="ai-label" style="margin-top:12px;">Fitness Level</label>
                     <select id="ai-level-select" class="ai-select">
-                        <option value="beginner">🌱 Beginner</option>
-                        <option value="intermediate" selected>⚡ Intermediate</option>
-                        <option value="advanced">🔥 Advanced</option>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate" selected>Intermediate</option>
+                        <option value="advanced">Advanced</option>
                     </select>
                     <div class="ai-goal-badge">
                         <i class="fa-solid fa-bullseye"></i> Your Goal: <strong>${userGoal.replace('_', ' ')}</strong>

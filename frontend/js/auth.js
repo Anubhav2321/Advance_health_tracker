@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 🌟 NEW: Direct Google Login Button Animation (Added without removing old code) ---
+    // --- NEW: Direct Google Login Button Animation (Added without removing old code) ---
     const directGoogleBtn = document.querySelector('.btn-google');
     if (directGoogleBtn) {
         directGoogleBtn.addEventListener('click', () => {

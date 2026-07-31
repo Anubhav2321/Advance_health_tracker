@@ -2,7 +2,7 @@
 // BioNexus: Onboarding & Data Collection
 // ==========================================
 
-// 💥 THE FIX: Secure JWT Parser (Handles Missing Padding Issues)
+// THE FIX: Secure JWT Parser (Handles Missing Padding Issues)
 function parseJwt(token) {
     try {
         let base64Url = token.split('.')[1];

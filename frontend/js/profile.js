@@ -2,7 +2,7 @@
 // BioNexus: Profile System Logic
 // ==========================================
 
-// 💥 THE FIX: Secure JWT Parser (Handles Missing Padding Issues)
+// THE FIX: Secure JWT Parser (Handles Missing Padding Issues)
 function parseJwt(token) {
     try {
         let base64Url = token.split('.')[1];
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const logoutBtn = document.getElementById('logout-btn');
     const editBtn = document.getElementById('edit-profile-btn');
     
-    // 💥 NEW: Upload Elements
+    // NEW: Upload Elements
     const imageUploadInput = document.getElementById('image-upload');
     const avatarCircle = document.querySelector('.avatar-circle');
 
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ==========================================
-    // 💥 5. MANUAL IMAGE UPLOAD LOGIC (NEW)
+    // 5. MANUAL IMAGE UPLOAD LOGIC (NEW)
     // ==========================================
     if (imageUploadInput) {
         imageUploadInput.addEventListener('change', async (e) => {

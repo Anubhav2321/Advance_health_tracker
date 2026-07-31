@@ -339,11 +339,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <div class="meta-item"><strong>Protein Target</strong><span>${profile.target_protein_g || 0}g</span></div>
                             <div class="meta-item"><strong>Water Target</strong><span>${profile.target_water_l || 0}L</span></div>
                         </div>
-                        <h2>📊 Daily Health Logs (Last 14 Days)</h2>
+                        <h2>Daily Health Logs (Last 14 Days)</h2>
                         <table>${healthTable}</table>
-                        <h2>💪 Workout History (Last 14 Days)</h2>
+                        <h2>Workout History (Last 14 Days)</h2>
                         <table>${workoutRows}</table>
-                        <h2>🍽️ Diet & Nutrition (Last 14 Days)</h2>
+                        <h2>Diet & Nutrition (Last 14 Days)</h2>
                         <table>${dietRows}</table>
                         <div class="footer">
                             BioNexus Advanced Health Tracker — AI-Powered Health Analytics<br>
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // DELETE ACCOUNT
     // ==========================================
     document.getElementById('delete-account-btn').addEventListener('click', async () => {
-        const confirmDelete = confirm("⚠️ DANGER: This will permanently erase ALL your data. Are you sure?");
+        const confirmDelete = confirm("WARNING: This will permanently erase ALL your data. Are you sure?");
         if (confirmDelete) {
             try {
                 const res = await fetch('/api/settings/delete-account', {

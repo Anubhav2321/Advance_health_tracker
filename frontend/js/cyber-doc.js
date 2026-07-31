@@ -202,16 +202,8 @@ async function loadSession(sessionId) {
             // Clear chat and render session messages
             chatBox.innerHTML = '';
             
-            const messages = data.session.messages || [];
-            messages.forEach(msg => {
-                if (msg.role === 'user') {
-                    appendMessage(msg.content, 'user-msg');
-                } else {
-                    appendBotMessage(msg.content);
-                }
-            });
-            
-            // Re-add typing indicator
+            // Re-create typing indicator FIRST so appendMessage/appendBotMessage
+            // have a valid reference node for insertBefore()
             const typingDiv = document.createElement('div');
             typingDiv.className = 'typing-indicator';
             typingDiv.id = 'typing';
@@ -222,6 +214,15 @@ async function loadSession(sessionId) {
             chatBox.appendChild(typingDiv);
             typingIndicator = typingDiv;
             typingLabel = typingDiv.querySelector('#typing-label');
+            
+            const messages = data.session.messages || [];
+            messages.forEach(msg => {
+                if (msg.role === 'user') {
+                    appendMessage(msg.content, 'user-msg');
+                } else {
+                    appendBotMessage(msg.content);
+                }
+            });
             
             if (messages.length === 0) {
                 showWelcomeMessage();
@@ -399,7 +400,11 @@ function appendMessage(text, className) {
     const msgDiv = document.createElement("div");
     msgDiv.className = `message ${className}`;
     msgDiv.innerHTML = text.replace(/\n/g, '<br>');
-    chatBox.insertBefore(msgDiv, typingIndicator);
+    if (typingIndicator && chatBox.contains(typingIndicator)) {
+        chatBox.insertBefore(msgDiv, typingIndicator);
+    } else {
+        chatBox.appendChild(msgDiv);
+    }
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
@@ -412,7 +417,11 @@ function appendBotMessage(text) {
     
     msgDiv.innerHTML = formatted;
 
-    chatBox.insertBefore(msgDiv, typingIndicator);
+    if (typingIndicator && chatBox.contains(typingIndicator)) {
+        chatBox.insertBefore(msgDiv, typingIndicator);
+    } else {
+        chatBox.appendChild(msgDiv);
+    }
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
@@ -423,11 +432,11 @@ function formatMedicalResponse(text) {
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     
     // Convert lines starting with emoji indicators to styled sections
-    html = html.replace(/📋\s*\*?\*?(DIAGNOSIS|निदान|রোগ নির্ণয়).*?:/gi, '<br><strong style="color:#00f3ff;font-size:0.92rem;">📋 DIAGNOSIS:</strong>');
-    html = html.replace(/💊\s*\*?\*?(MEDICINE|दवाई|ওষুধ).*?:/gi, '<br><strong style="color:#00ff87;font-size:0.92rem;">💊 MEDICINE:</strong>');
-    html = html.replace(/🍽️?\s*\*?\*?(DIET|आहार|খাদ্য).*?:/gi, '<br><strong style="color:#ff9d00;font-size:0.92rem;">🍽️ DIET & REST:</strong>');
-    html = html.replace(/⚠️\s*\*?\*?(RED FLAG|चेतावनी|সতর্কতা|WARNING).*?:/gi, '<br><strong style="color:#ff6b6b;font-size:0.92rem;">⚠️ RED FLAGS:</strong>');
-    html = html.replace(/📌\s*\*?\*?(DISCLAIMER|अस्वीकरण|দাবিত্যাগ).*?:/gi, '<br><strong style="color:#a0a6b1;font-size:0.82rem;">📌 DISCLAIMER:</strong>');
+    html = html.replace(/📋\s*\*?\*?(DIAGNOSIS|निदान|রোগ নির্ণয়).*?:/gi, '<br><strong style="color:#00f3ff;font-size:0.92rem;"><i class="fa-solid fa-clipboard-list" style="margin-right:4px;"></i> DIAGNOSIS:</strong>');
+    html = html.replace(/💊\s*\*?\*?(MEDICINE|दवाई|ওষুধ).*?:/gi, '<br><strong style="color:#00ff87;font-size:0.92rem;"><i class="fa-solid fa-pills" style="margin-right:4px;"></i> MEDICINE:</strong>');
+    html = html.replace(/🍽️?\s*\*?\*?(DIET|आहार|খাদ্য).*?:/gi, '<br><strong style="color:#ff9d00;font-size:0.92rem;"><i class="fa-solid fa-utensils" style="margin-right:4px;"></i> DIET & REST:</strong>');
+    html = html.replace(/⚠️\s*\*?\*?(RED FLAG|चेतावनी|সতর্কতা|WARNING).*?:/gi, '<br><strong style="color:#ff6b6b;font-size:0.92rem;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:4px;"></i> RED FLAGS:</strong>');
+    html = html.replace(/📌\s*\*?\*?(DISCLAIMER|अस्वीकरण|দাবিত্যাগ).*?:/gi, '<br><strong style="color:#a0a6b1;font-size:0.82rem;"><i class="fa-solid fa-circle-info" style="margin-right:4px;"></i> DISCLAIMER:</strong>');
     
     // Convert bullet points (- or •) to styled list items
     html = html.replace(/^[\-•]\s+(.+)/gm, '<div style="padding-left:12px;margin:3px 0;"><span style="color:#00f3ff;margin-right:6px;">▸</span>$1</div>');

@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (warningData.status === "success" && warningData.warning) {
                     warningBox.innerText = warningData.warning;
                     warningBox.style.display = 'block';
-                    if (warningData.warning.includes('⚠️')) {
+                    if (warningData.warning.includes('WARNING:')) {
                         warningBox.style.background = 'rgba(255,0,0,0.1)';
                         warningBox.style.borderLeftColor = '#ff5e5e';
                         warningBox.style.color = '#ff5e5e';
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ==========================================
-    // 🍽️ AI NUTRITION COACH — FOOD PHOTO ANALYSIS
+    // AI NUTRITION COACH — FOOD PHOTO ANALYSIS
     // ==========================================
     
     const cameraScanBtn = document.getElementById('camera-scan-btn');
@@ -509,10 +509,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             <div class="log-food-actions" style="display:flex;gap:10px;align-items:center;margin-top:10px;">
                 <select id="analyzed-meal-type" class="add-meal-select" style="flex:1;padding:10px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(0,243,255,0.2);color:#fff;border-radius:10px;font-family:'Inter',sans-serif;font-size:0.85rem;outline:none;cursor:pointer;">
-                    <option value="Breakfast">🌅 Breakfast</option>
-                    <option value="Lunch">☀️ Lunch</option>
-                    <option value="Snacks" selected>🍿 Snacks</option>
-                    <option value="Dinner">🌙 Dinner</option>
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Snacks" selected>Snacks</option>
+                    <option value="Dinner">Dinner</option>
                 </select>
                 <button class="log-analyzed-btn" id="log-analyzed-food-btn" style="flex:1;">
                     <i class="fa-solid fa-plus-circle"></i> Log This Food

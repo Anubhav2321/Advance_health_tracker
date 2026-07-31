@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const chatBody = document.querySelector('.ria-chat-body');
                     if (chatBody && result.ai_insight) {
-                        appendMessage("Analyzing your new data... 📊", false);
+                        appendMessage("Analyzing your new data...", false);
                         setTimeout(() => appendMessage(result.ai_insight, false), 1000);
                     }
                 }
@@ -435,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 chatBody.removeChild(typingMsg);
                 
                 if (response.ok) window.appendMessage(data.reply, false);
-                else window.appendMessage("Oops, I lost connection! 🤖", false);
+                else window.appendMessage("Oops, I lost connection!", false);
 
             } catch (error) {
                 chatBody.removeChild(typingMsg);

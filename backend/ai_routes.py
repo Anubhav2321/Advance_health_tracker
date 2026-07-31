@@ -118,18 +118,18 @@ def get_block_reason(message: str) -> str:
     
     for kw in sexual_keywords:
         if kw in msg_lower:
-            return "🚫 VIOLATION: Sexual and adult content is STRICTLY PROHIBITED on this medical platform. This is a health-focused AI designed for medical consultations only. Continued violations will result in immediate account suspension."
+            return "VIOLATION: Sexual and adult content is STRICTLY PROHIBITED on this medical platform. This is a health-focused AI designed for medical consultations only. Continued violations will result in immediate account suspension."
     for kw in violence_keywords:
         if kw in msg_lower:
-            return "🚫 VIOLATION: Content promoting violence, self-harm, or harmful activities is absolutely forbidden. If you are in crisis, please contact emergency services (112) or a mental health helpline immediately."
+            return "VIOLATION: Content promoting violence, self-harm, or harmful activities is absolutely forbidden. If you are in crisis, please contact emergency services (112) or a mental health helpline immediately."
     for kw in drug_keywords:
         if kw in msg_lower:
-            return "🚫 VIOLATION: Requests about illegal drug use, manufacturing, or procurement are strictly forbidden. If you are struggling with substance abuse, please contact NIMHANS helpline: 080-46110007."
+            return "VIOLATION: Requests about illegal drug use, manufacturing, or procurement are strictly forbidden. If you are struggling with substance abuse, please contact NIMHANS helpline: 080-46110007."
     for kw in jailbreak_keywords:
         if kw in msg_lower:
-            return "🚫 VIOLATION: Attempting to bypass AI safety filters or jailbreak this system is a serious violation. This incident has been logged. Continued attempts will result in permanent account suspension."
+            return "VIOLATION: Attempting to bypass AI safety filters or jailbreak this system is a serious violation. This incident has been logged. Continued attempts will result in permanent account suspension."
     
-    return "🚫 VIOLATION: Your message contains prohibited content. This is a medical platform exclusively for health-related queries."
+    return "VIOLATION: Your message contains prohibited content. This is a medical platform exclusively for health-related queries."
 
 
 # ==========================================
@@ -414,7 +414,7 @@ async def ai_doctor_chat(request: ChatRequest):
             minutes_left = int(remaining_time.total_seconds() / 60)
             return {
                 "status": "blocked", 
-                "message": f"🔒 SYSTEM LOCKDOWN: Your access has been revoked for sending harmful content. Try again in {minutes_left} minutes."
+                "message": f"SYSTEM LOCKDOWN: Your access has been revoked for sending harmful content. Try again in {minutes_left} minutes."
             }
         else:
             # Block duration expired, reset warnings and unblock
@@ -437,7 +437,7 @@ async def ai_doctor_chat(request: ChatRequest):
             )
             return {
                 "status": "blocked", 
-                "message": f"🔒 CRITICAL: {current_warnings} violations detected. Your account has been LOCKED for 2 HOURS due to repeated prohibited content. This platform is exclusively for medical consultations."
+                "message": f"CRITICAL: {current_warnings} violations detected. Your account has been LOCKED for 2 HOURS due to repeated prohibited content. This platform is exclusively for medical consultations."
             }
         else:
             await db.users.update_one(
@@ -446,7 +446,7 @@ async def ai_doctor_chat(request: ChatRequest):
             )
             return {
                 "status": "warning", 
-                "message": f"⚠️ STRIKE {current_warnings}/3: {block_reason}\n\n{'⚡ FINAL WARNING: One more violation will lock your account for 2 HOURS.' if current_warnings == 2 else '📌 Further violations will result in account suspension.'}"
+                "message": f"STRIKE {current_warnings}/3: {block_reason}\n\n{'FINAL WARNING: One more violation will lock your account for 2 HOURS.' if current_warnings == 2 else 'Further violations will result in account suspension.'}"
             }
 
     # 4. Get or create chat session
@@ -489,7 +489,7 @@ async def ai_doctor_chat(request: ChatRequest):
             # Extract the warning message from the AI response
             warning_text = ai_response.replace("[FLAG: HARMFUL_CONTENT]", "").strip()
             if not warning_text:
-                warning_text = "🚫 Your message contains prohibited content. This is a medical platform only."
+                warning_text = "Your message contains prohibited content. This is a medical platform only."
             
             if current_warnings >= 3:
                 # Issue 2-hour block after 3 warnings
@@ -500,7 +500,7 @@ async def ai_doctor_chat(request: ChatRequest):
                 )
                 return {
                     "status": "blocked", 
-                    "message": f"🔒 CRITICAL: {current_warnings} violations detected. Your account has been locked for 2 HOURS due to repeated harmful content. This platform is exclusively for medical use."
+                    "message": f"CRITICAL: {current_warnings} violations detected. Your account has been locked for 2 HOURS due to repeated harmful content. This platform is exclusively for medical use."
                 }
             else:
                 # Issue warning with strike count
@@ -510,14 +510,14 @@ async def ai_doctor_chat(request: ChatRequest):
                 )
                 return {
                     "status": "warning", 
-                    "message": f"⚠️ STRIKE {current_warnings}/3: {warning_text}\n\n{'⚡ FINAL WARNING: One more violation will lock your account for 2 HOURS.' if current_warnings == 2 else '📌 Further violations will result in account suspension.'}"
+                    "message": f"STRIKE {current_warnings}/3: {warning_text}\n\n{'FINAL WARNING: One more violation will lock your account for 2 HOURS.' if current_warnings == 2 else 'Further violations will result in account suspension.'}"
                 }
         
         # 9. Handle OFF-TOPIC but harmless content — NO warning counter increment
         if "[FLAG: OFF_TOPIC]" in ai_response:
             redirect_text = ai_response.replace("[FLAG: OFF_TOPIC]", "").strip()
             if not redirect_text:
-                redirect_text = "👋 I'm BioNexus Medical AI — I specialize in health and medical queries only. How can I help with your health today?"
+                redirect_text = "I'm BioNexus Medical AI — I specialize in health and medical queries only. How can I help with your health today?"
             return {"status": "success", "message": redirect_text, "session_id": current_session_id}
 
         # 10. Determine phase transition based on AI response
