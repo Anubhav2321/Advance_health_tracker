@@ -30,10 +30,10 @@ def get_health_insight(calories: int, water: float, sleep: float, steps: int) ->
     """
     
     try:
-        # Using LLaMA 3 (8B) model via Groq for lightning-fast responses
+        # Using GPT-OSS 20B model via Groq for lightning-fast responses
         response = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="llama-3.1-8b-instant", 
+            model="openai/gpt-oss-20b", 
             temperature=0.6,
             max_tokens=80
         )

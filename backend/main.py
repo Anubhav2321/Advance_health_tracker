@@ -467,7 +467,7 @@ async def ria_chat_engine(chat: ChatMessage):
 
         chat_completion = await client.chat.completions.create(
             messages=[{"role": "system", "content": ria_persona}, {"role": "user", "content": chat.user_message}],
-            model="llama-3.1-8b-instant", temperature=0.7, max_tokens=200
+            model="openai/gpt-oss-20b", temperature=0.7, max_tokens=200
         )
         return {"status": "success", "reply": chat_completion.choices[0].message.content}
     except Exception as e:

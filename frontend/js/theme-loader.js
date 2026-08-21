@@ -1,7 +1,6 @@
-// ==========================================
 // BioNexus: Theme Loader (Runs BEFORE paint)
 // Must be included in <head> of every page
-// ==========================================
+
 (function() {
     const root = document.documentElement;
     const savedMode = localStorage.getItem('bionexus_theme_mode') || 'dark';

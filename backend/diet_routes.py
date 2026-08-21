@@ -152,7 +152,7 @@ async def ai_food_warning(req: AIWarningRequest):
         
         completion = await client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="llama-3.1-8b-instant", temperature=0.6, max_tokens=150
+            model="openai/gpt-oss-20b", temperature=0.6, max_tokens=150
         )
         return {"status": "success", "warning": completion.choices[0].message.content}
     except Exception as e:
@@ -190,7 +190,7 @@ async def ai_meal_planner(user_email: str):
         
         completion = await client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="llama-3.1-8b-instant", temperature=0.7, max_tokens=350
+            model="openai/gpt-oss-20b", temperature=0.7, max_tokens=350
         )
         return {"status": "success", "plan": completion.choices[0].message.content}
     except Exception as e:
@@ -231,7 +231,7 @@ async def ria_diet_consult(req: RIADietChat):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": req.user_message}
             ],
-            model="llama-3.1-8b-instant", temperature=0.6, max_tokens=200
+            model="openai/gpt-oss-20b", temperature=0.6, max_tokens=200
         )
         return {"status": "success", "reply": completion.choices[0].message.content}
     except Exception as e:
@@ -351,7 +351,7 @@ Respond ONLY with valid JSON (no markdown, no code fences):
                 
                 fallback_completion = fallback_client.chat.completions.create(
                     messages=[{"role": "user", "content": fallback_prompt}],
-                    model="llama-3.3-70b-versatile",
+                    model="openai/gpt-oss-120b",
                     temperature=0.3,
                     max_tokens=400
                 )
@@ -417,7 +417,7 @@ Respond ONLY with valid JSON (no markdown, no code fences):
 Return this exact JSON format:
 {{"food_name":"Indian/cultural name of the food","description":"2-3 sentences about what this dish is and its ingredients","calories":350,"protein":15.0,"carbs":45.0,"fat":12.0,"fiber":3.0,"sugar":5.0,"health_rating":7,"serving_size":"1 plate","points":["Benefit 1","Benefit 2","Benefit 3","Benefit 4","Tip"]}}"""}
                     ],
-                    model="llama-3.3-70b-versatile",
+                    model="openai/gpt-oss-120b",
                     temperature=0.1,
                     max_tokens=600
                 )

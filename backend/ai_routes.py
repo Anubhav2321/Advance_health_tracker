@@ -476,7 +476,7 @@ async def ai_doctor_chat(request: ChatRequest):
         # 7. Request response from Groq API
         chat_completion = groq_client.chat.completions.create(
             messages=messages,
-            model="llama-3.3-70b-versatile", 
+            model="openai/gpt-oss-120b", 
             temperature=0.3,
             max_tokens=1024,
         )
