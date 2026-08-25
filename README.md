@@ -395,6 +395,7 @@ https://bionexus-live.onrender.com
 - 🥗 AI Nutrition Coach
 - 🌍 Multi-language Support
 - 📤 PDF Health Reports
+- 📈 Health Analytics
 
 ---
 
@@ -402,7 +403,6 @@ https://bionexus-live.onrender.com
 
 - ❤️ Heart Rate Monitoring
 - ⌚ Smartwatch Integration
-- 📈 Health Analytics
 - 🎤 Voice Assistant
 
 
